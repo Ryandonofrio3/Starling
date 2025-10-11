@@ -95,10 +95,18 @@ release/
 *.app
 *.zip
 
-# Build scripts (optional - uncomment if you don't want these in git)
-# build-release.sh
-# package-release.sh
-# setup-github.sh
+# Build and setup scripts (internal tooling)
+build-release.sh
+package-release.sh
+setup-github.sh
+TEST-FRESH-USER.md
+
+# Internal planning docs (keep local only)
+STEPS.md
+TODO.md
+AGENTS.md
+CONTRIBUTING.md
+HOMEBREW.md
 
 # macOS
 .DS_Store
