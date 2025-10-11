@@ -13,7 +13,7 @@ struct PreferencesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Parakeet Paste Preferences")
+            Text("Starling Preferences")
                 .font(.title2)
                 .bold()
             
@@ -56,7 +56,7 @@ struct PreferencesView: View {
                             .frame(width: 60, alignment: .trailing)
                     }
                     
-                    Text("How long Parakeet waits after silence before auto-stopping. Longer values are kinder to dramatic pauses.")
+                    Text("How long Starling waits after silence before auto-stopping. Longer values are kinder to dramatic pauses.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

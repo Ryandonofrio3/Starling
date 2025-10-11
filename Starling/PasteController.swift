@@ -10,7 +10,7 @@ import Carbon.HIToolbox
 import os
 
 final class PasteController {
-    private let logger = Logger(subsystem: "com.parakeet.Starling", category: "PasteController")
+    private let logger = Logger(subsystem: "com.starling.app", category: "PasteController")
     private let pasteboard = NSPasteboard.general
 
     func paste(text: String, focusSnapshot: FocusSnapshot?, preserveClipboard: Bool) {
@@ -106,6 +106,6 @@ final class PasteController {
 }
 
 extension Notification.Name {
-    static let pasteControllerDidCopy = Notification.Name("com.parakeet.paste.didCopy")
-    static let pasteControllerDidPaste = Notification.Name("com.parakeet.paste.didPaste")
+    static let pasteControllerDidCopy = Notification.Name("com.starling.paste.didCopy")
+    static let pasteControllerDidPaste = Notification.Name("com.starling.paste.didPaste")
 }

@@ -15,7 +15,7 @@ final class StatusBarController {
     private let toggleItem = NSMenuItem(title: "Start Listening", action: #selector(handleToggleRequest), keyEquivalent: "")
     private let preferencesItem = NSMenuItem(title: "Preferences…", action: #selector(handlePreferencesRequest), keyEquivalent: ",")
     private let accessibilityItem = NSMenuItem(title: "Grant Accessibility Access…", action: #selector(handleAccessibilityRequest), keyEquivalent: "")
-    private let quitItem = NSMenuItem(title: "Quit Parakeet Paste", action: #selector(handleQuit), keyEquivalent: "q")
+    private let quitItem = NSMenuItem(title: "Quit Starling", action: #selector(handleQuit), keyEquivalent: "q")
     private var cancellables = Set<AnyCancellable>()
     private let appState: AppState
     private let quitAction: () -> Void
@@ -99,7 +99,7 @@ final class StatusBarController {
 }
 
 extension Notification.Name {
-    static let statusBarToggleRequested = Notification.Name("com.parakeet.statusBarToggleRequested")
-    static let statusBarAccessibilityRequested = Notification.Name("com.parakeet.statusBarAccessibilityRequested")
-    static let statusBarPreferencesRequested = Notification.Name("com.parakeet.statusBarPreferencesRequested")
+    static let statusBarToggleRequested = Notification.Name("com.starling.statusBarToggleRequested")
+    static let statusBarAccessibilityRequested = Notification.Name("com.starling.statusBarAccessibilityRequested")
+    static let statusBarPreferencesRequested = Notification.Name("com.starling.statusBarPreferencesRequested")
 }

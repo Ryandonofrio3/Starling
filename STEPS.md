@@ -1,4 +1,4 @@
-# STEPS.md — Parakeet Paste (Swift + FluidAudio)
+# STEPS.md — Starling (Swift + FluidAudio)
 
 > Check-offable roadmap capturing what is shipped and what remains. Update as you land features.
 

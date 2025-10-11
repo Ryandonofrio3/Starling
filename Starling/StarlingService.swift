@@ -22,7 +22,7 @@ actor ParakeetService {
 
     private var state: State = .idle
     private var manager: AsrManager?
-    private let logger = Logger(subsystem: "com.parakeet.Starling", category: "ParakeetService")
+    private let logger = Logger(subsystem: "com.starling.app", category: "TranscriptionService")
 
     func prepareIfNeeded(progress: (@Sendable (Double) async -> Void)? = nil) async throws {
         switch state {

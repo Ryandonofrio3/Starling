@@ -13,29 +13,46 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     let onComplete: () -> Void
     
+    private let totalPages = 5
+    
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $currentPage) {
-                WelcomePage()
-                    .tag(0)
-                
-                MicrophonePage()
-                    .tag(1)
-                
-                AccessibilityPage()
-                    .tag(2)
-                
-                ModelDownloadPage()
-                    .tag(3)
-                
-                ReadyPage(onComplete: {
-                    onComplete()
-                })
-                .tag(4)
+            // Content area
+            ZStack {
+                if currentPage == 0 {
+                    WelcomePage()
+                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                } else if currentPage == 1 {
+                    MicrophonePage()
+                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                } else if currentPage == 2 {
+                    AccessibilityPage()
+                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                } else if currentPage == 3 {
+                    ModelDownloadPage()
+                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                } else if currentPage == 4 {
+                    ReadyPage(onComplete: {
+                        onComplete()
+                    })
+                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                }
             }
-            .tabViewStyle(.page)
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.easeInOut(duration: 0.3), value: currentPage)
             
+            // Page indicators
+            HStack(spacing: 8) {
+                ForEach(0..<totalPages, id: \.self) { index in
+                    Circle()
+                        .fill(index == currentPage ? Color.accentColor : Color.gray.opacity(0.3))
+                        .frame(width: 8, height: 8)
+                        .animation(.easeInOut, value: currentPage)
+                }
+            }
+            .padding(.vertical, 16)
+            
+            // Navigation buttons
             HStack {
                 if currentPage > 0 {
                     Button("Back") {
@@ -48,7 +65,7 @@ struct OnboardingView: View {
                 
                 Spacer()
                 
-                if currentPage < 4 {
+                if currentPage < totalPages - 1 {
                     Button("Next") {
                         withAnimation {
                             currentPage += 1
@@ -72,7 +89,7 @@ struct WelcomePage: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 80, height: 80)
             
-            Text("Welcome to Parakeet Paste")
+            Text("Welcome to Starling")
                 .font(.largeTitle)
                 .bold()
             
@@ -106,7 +123,7 @@ struct MicrophonePage: View {
                 .font(.title)
                 .bold()
             
-            Text("Parakeet Paste needs microphone access to transcribe your voice.")
+            Text("Starling needs microphone access to transcribe your voice.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -171,7 +188,7 @@ struct AccessibilityPage: View {
                 .bold()
             
             VStack(alignment: .leading, spacing: 12) {
-                Text("Parakeet Paste needs Accessibility permissions to:")
+                Text("Starling needs Accessibility permissions to:")
                     .font(.body)
                 
                 FeatureRow(icon: "⌘V", text: "Simulate paste keystrokes")
@@ -239,7 +256,7 @@ struct ModelDownloadPage: View {
                 .bold()
             
             VStack(alignment: .leading, spacing: 16) {
-                Text("On first use, Parakeet will download:")
+                Text("On first use, Starling will download:")
                     .font(.body)
                 
                 VStack(alignment: .leading, spacing: 8) {

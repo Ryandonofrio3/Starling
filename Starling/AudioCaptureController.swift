@@ -33,9 +33,9 @@ final class AudioCaptureController {
 
     private let engine = AVAudioEngine()
     private let targetFormat: AVAudioFormat
-    private let logger = Logger(subsystem: "com.parakeet.Starling", category: "AudioCapture")
+    private let logger = Logger(subsystem: "com.starling.app", category: "AudioCapture")
     private let bufferSize: AVAudioFrameCount = 1024
-    private let queue = DispatchQueue(label: "com.parakeet.audio-capture", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "com.starling.audio-capture", qos: .userInitiated)
     private var converter: AVAudioConverter?
     private var inputFormat: AVAudioFormat?
 

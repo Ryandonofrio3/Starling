@@ -46,7 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var cancellables = Set<AnyCancellable>()
     private var toastWorkItem: DispatchWorkItem?
     private var idleResetWorkItem: DispatchWorkItem?
-    private let logger = Logger(subsystem: "com.parakeet.Starling", category: "AppDelegate")
+    private let logger = Logger(subsystem: "com.starling.app", category: "AppDelegate")
     private var lastFocusSnapshot: FocusSnapshot?
     private var preferencesWindowController: NSWindowController?
     private var onboardingWindowController: NSWindowController?
@@ -236,7 +236,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Parakeet Paste Settings"
+        window.title = "Starling Settings"
         window.center()
         window.contentViewController = hostingController
         window.isReleasedWhenClosed = false
@@ -270,7 +270,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Welcome to Parakeet Paste"
+        window.title = "Welcome to Starling"
         window.center()
         window.contentViewController = hostingController
         window.isReleasedWhenClosed = false

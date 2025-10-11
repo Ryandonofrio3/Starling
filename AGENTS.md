@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-All runtime code is Swift and lives in `Starling/`: hotkey/audio infrastructure, HUD UI, paste automation, and the new FluidAudio-backed `ParakeetService`. Design assets and preview data live under `Starling/Assets.xcassets` and `Starling/Preview Content/`. Project settings and SwiftPM dependencies are tracked in `Starling.xcodeproj/`. Use `TODO.md` and `STEPS.md` for planning breadcrumbs.
+All runtime code is Swift and lives in `Starling/`: hotkey/audio infrastructure, HUD UI, paste automation, and the FluidAudio-backed transcription service. Design assets and preview data live under `Starling/Assets.xcassets` and `Starling/Preview Content/`. Project settings and SwiftPM dependencies are tracked in `Starling.xcodeproj/`. Use `TODO.md` and `STEPS.md` for planning breadcrumbs.
 
 ## Build, Test, and Development Commands
 Launch the app through Xcode (`open Starling.xcodeproj`, select the Starling scheme) or build headless with `xcodebuild -scheme Starling -configuration Debug build`. First boot downloads the ~2.5 GB Parakeet Core ML bundle via FluidAudio; watch Console for `Transcription service ready` and allow the download to complete before timing anything. No Python worker remains.

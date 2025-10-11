@@ -1,4 +1,4 @@
-# to-do.md — “Parakeet Paste” (macOS Swift + FluidAudio)
+# to-do.md — Starling (macOS Swift + FluidAudio)
 
 ## Vision
 
