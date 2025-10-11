@@ -29,13 +29,13 @@ Starling is a lightweight macOS menu bar app that lets you dictate text anywhere
 #### Option 1: Homebrew (Recommended)
 
 ```bash
-brew tap <your-username>/starling
+brew tap <Ryandonofrio3>/starling
 brew install starling
 ```
 
 #### Option 2: Direct Download
 
-1. Download the latest `.app` from [Releases](https://github.com/your-username/starling/releases)
+1. Download the latest `.app` from [Releases](https://github.com/Ryandonofrio3/starling/releases)
 2. Drag `Starling.app` to `/Applications`
 3. Open the app — it runs in your menu bar (look for the bird 🦜)
 
@@ -97,7 +97,7 @@ Access preferences from the menu bar bird icon:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/starling.git
+git clone https://github.com/Ryandonofrio3/starling.git
 cd starling/Starling
 
 # Open in Xcode
@@ -204,7 +204,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ## 📬 Contact
 
-Have feedback or questions? Open an issue on [GitHub](https://github.com/your-username/starling/issues).
+Have feedback or questions? Open an issue on [GitHub](https://github.com/Ryandonofrio3/starling/issues).
 
 ---
 
