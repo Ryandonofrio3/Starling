@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  parakeet-paste
+//  Starling
 //
 //  Created by Ryan D'Onofrio on 10/11/25.
 //
