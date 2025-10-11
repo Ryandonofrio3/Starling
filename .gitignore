@@ -89,6 +89,17 @@ fastlane/test_output
 
 iOSInjectionProject/
 
+# Build artifacts and release files
+build/
+release/
+*.app
+*.zip
+
+# Build scripts (optional - uncomment if you don't want these in git)
+# build-release.sh
+# package-release.sh
+# setup-github.sh
+
 # macOS
 .DS_Store
 .AppleDouble
