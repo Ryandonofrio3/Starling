@@ -113,3 +113,15 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Build and release scripts
+*.sh
+
+# Agent documentation
+AGENTS.md
+CLAUDE.md
+
+# Testing and steps documentation
+TEST-*.md
+STEPS.md
+TODO.md
+
