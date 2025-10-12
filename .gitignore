@@ -89,25 +89,6 @@ fastlane/test_output
 
 iOSInjectionProject/
 
-# Build artifacts and release files
-build/
-release/
-*.app
-*.zip
-
-# Build and setup scripts (internal tooling)
-build-release.sh
-package-release.sh
-setup-github.sh
-TEST-FRESH-USER.md
-
-# Internal planning docs (keep local only)
-STEPS.md
-TODO.md
-AGENTS.md
-CONTRIBUTING.md
-HOMEBREW.md
-
 # macOS
 .DS_Store
 .AppleDouble

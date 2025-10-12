@@ -6,14 +6,24 @@
 //
 
 import SwiftUI
-import AVFoundation
 
 struct OnboardingView: View {
-    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var microphonePermission: MicrophonePermissionMonitor
+    @ObservedObject private var accessibilityPermission: AccessibilityPermissionMonitor
     @State private var currentPage = 0
     let onComplete: () -> Void
-    
+
     private let totalPages = 5
+
+    init(
+        microphonePermission: MicrophonePermissionMonitor = .shared,
+        accessibilityPermission: AccessibilityPermissionMonitor = .shared,
+        onComplete: @escaping () -> Void
+    ) {
+        self._microphonePermission = ObservedObject(wrappedValue: microphonePermission)
+        self._accessibilityPermission = ObservedObject(wrappedValue: accessibilityPermission)
+        self.onComplete = onComplete
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -21,21 +31,21 @@ struct OnboardingView: View {
             ZStack {
                 if currentPage == 0 {
                     WelcomePage()
-                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                        .transition(Self.pageTransition)
                 } else if currentPage == 1 {
-                    MicrophonePage()
-                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                    MicrophonePage(permission: microphonePermission)
+                        .transition(Self.pageTransition)
                 } else if currentPage == 2 {
-                    AccessibilityPage()
-                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                    AccessibilityPage(permission: accessibilityPermission)
+                        .transition(Self.pageTransition)
                 } else if currentPage == 3 {
                     ModelDownloadPage()
-                        .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                        .transition(Self.pageTransition)
                 } else if currentPage == 4 {
                     ReadyPage(onComplete: {
                         onComplete()
                     })
-                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)))
+                    .transition(Self.pageTransition)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -81,6 +91,15 @@ struct OnboardingView: View {
     }
 }
 
+private extension OnboardingView {
+    static var pageTransition: AnyTransition {
+        .asymmetric(
+            insertion: .move(edge: Edge.trailing),
+            removal: .move(edge: Edge.leading)
+        )
+    }
+}
+
 struct WelcomePage: View {
     var body: some View {
         VStack(spacing: 24) {
@@ -110,9 +129,9 @@ struct WelcomePage: View {
 }
 
 struct MicrophonePage: View {
-    @State private var microphoneAuthorized = false
-    @State private var isChecking = false
-    
+    @ObservedObject var permission: MicrophonePermissionMonitor
+    @State private var isRequesting = false
+
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "mic.circle.fill")
@@ -129,7 +148,7 @@ struct MicrophonePage: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
-            if microphoneAuthorized {
+            if permission.state.isAuthorized {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -140,13 +159,30 @@ struct MicrophonePage: View {
                 .background(Color.green.opacity(0.1))
                 .cornerRadius(8)
             } else {
-                Button("Request Microphone Access") {
-                    requestMicrophonePermission()
+                VStack(spacing: 12) {
+                    if permission.state.needsPrompt {
+                        Button("Request Microphone Access") {
+                            requestPermission()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isRequesting)
+                    } else {
+                        Button("Open Microphone Settings") {
+                            permission.openSystemSettings()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+
+                    if permission.state.isBlocked {
+                        Text("Grant access in System Settings → Privacy & Security → Microphone, then come back here.")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(isChecking)
             }
-            
+
             Text("You can change this later in System Settings → Privacy & Security → Microphone")
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -155,28 +191,28 @@ struct MicrophonePage: View {
         }
         .padding(40)
         .onAppear {
-            checkMicrophoneStatus()
+            permission.refresh()
         }
     }
-    
-    private func checkMicrophoneStatus() {
-        microphoneAuthorized = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
-    }
-    
-    private func requestMicrophonePermission() {
-        isChecking = true
-        AVCaptureDevice.requestAccess(for: .audio) { granted in
-            DispatchQueue.main.async {
-                microphoneAuthorized = granted
-                isChecking = false
+
+    private func requestPermission() {
+        guard !isRequesting else { return }
+        isRequesting = true
+        Task {
+            let granted = await permission.requestAccess()
+            await MainActor.run {
+                isRequesting = false
+                if !granted && permission.state.isBlocked {
+                    permission.openSystemSettings()
+                }
             }
         }
     }
 }
 
 struct AccessibilityPage: View {
-    @State private var accessibilityTrusted = false
-    
+    @ObservedObject var permission: AccessibilityPermissionMonitor
+
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "hand.point.up.left.fill")
@@ -197,7 +233,7 @@ struct AccessibilityPage: View {
             }
             .padding(.horizontal, 40)
             
-            if accessibilityTrusted {
+            if permission.isTrusted {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -209,37 +245,23 @@ struct AccessibilityPage: View {
                 .cornerRadius(8)
             } else {
                 Button("Open Accessibility Settings") {
-                    openAccessibilitySettings()
+                    permission.requestAccess()
                 }
                 .buttonStyle(.borderedProminent)
                 
-                Text("After granting access, you may need to restart the app.")
+                Text("After granting access, Starling will auto-detect it. Restart only if the status stays unchanged.")
                     .font(.caption)
                     .foregroundColor(.orange)
             }
             
             Button("Check Status") {
-                checkAccessibilityStatus()
+                permission.refresh()
             }
             .buttonStyle(.bordered)
         }
         .padding(40)
         .onAppear {
-            checkAccessibilityStatus()
-        }
-    }
-    
-    private func checkAccessibilityStatus() {
-        accessibilityTrusted = AXIsProcessTrusted()
-    }
-    
-    private func openAccessibilitySettings() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
-        
-        // Also open System Settings
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-            NSWorkspace.shared.open(url)
+            permission.refresh()
         }
     }
 }
@@ -356,4 +378,3 @@ struct FeatureRow: View {
 #Preview {
     OnboardingView(onComplete: {})
 }
-

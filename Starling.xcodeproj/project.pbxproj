@@ -13,6 +13,7 @@
 		41EBFD191595D1913D380563 /* FocusSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189C3128CE605EE287F9EBF9 /* FocusSnapshot.swift */; };
 		50285D87632C5E44FB633D84 /* AccessibilityPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0D7F3EA5508268B8559AF8 /* AccessibilityPermissionManager.swift */; };
 		58297313615B464F44FA3779 /* AudioCaptureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B983B023B14767BFC6741C9 /* AudioCaptureController.swift */; };
+		5F9B8E1E2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F9B8E1D2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift */; };
 		602709DB37BDC4149A0815C7 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2359911BA86E42842D4DCEBA /* StatusBarController.swift */; };
 		77CE9C280AC50884995E7FBF /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C3095A08BB810A034C82CD4 /* AppState.swift */; };
 		8BF338BC2E9AC61100FF9F32 /* StarlingApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BF338BB2E9AC61100FF9F32 /* StarlingApp.swift */; };
@@ -33,6 +34,7 @@
 		2359911BA86E42842D4DCEBA /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
 		2B983B023B14767BFC6741C9 /* AudioCaptureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureController.swift; sourceTree = "<group>"; };
 		568CC81FDF6B09FA095E334E /* VoiceActivityDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceActivityDetector.swift; sourceTree = "<group>"; };
+		5F9B8E1D2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophonePermissionMonitor.swift; sourceTree = "<group>"; };
 		6AE6ECB674A3D303EB80F907 /* OnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7C3095A08BB810A034C82CD4 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		82F6B062C27C3FE56D040B18 /* PasteController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteController.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				8BF338BF2E9AC61300FF9F32 /* Assets.xcassets */,
 				8BF338C42E9AC61300FF9F32 /* Starling.entitlements */,
 				8BF338C12E9AC61300FF9F32 /* Preview Content */,
+				5F9B8E1D2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift */,
 				6AE6ECB674A3D303EB80F907 /* OnboardingView.swift */,
 			);
 			path = Starling;
@@ -203,6 +206,7 @@
 				FE418F09D70D317850696BBF /* HUDWindowController.swift in Sources */,
 				50285D87632C5E44FB633D84 /* AccessibilityPermissionManager.swift in Sources */,
 				8BF338BE2E9AC61100FF9F32 /* ContentView.swift in Sources */,
+				5F9B8E1E2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift in Sources */,
 				8BF338BC2E9AC61100FF9F32 /* StarlingApp.swift in Sources */,
 				271B6689919B606517C5EC74 /* OnboardingView.swift in Sources */,
 			);

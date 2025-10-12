@@ -33,7 +33,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     private lazy var hudController = HUDWindowController(appState: appState)
     private let hotkeyManager = HotkeyManager()
-    private let accessibilityManager = AccessibilityPermissionManager()
+    private let accessibilityPermission = AccessibilityPermissionMonitor.shared
+    private let microphonePermission = MicrophonePermissionMonitor.shared
     private let audioController = AudioCaptureController()
     private let transcriptionService = ParakeetService()
     private let pasteController = PasteController()
@@ -46,6 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var cancellables = Set<AnyCancellable>()
     private var toastWorkItem: DispatchWorkItem?
     private var idleResetWorkItem: DispatchWorkItem?
+    private var microphoneRequestTask: Task<Void, Never>?
+    private var focusSnapshotRetryWorkItem: DispatchWorkItem?
     private let logger = Logger(subsystem: "com.starling.app", category: "AppDelegate")
     private var lastFocusSnapshot: FocusSnapshot?
     private var preferencesWindowController: NSWindowController?
@@ -67,15 +70,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         preferencesPublisherBindings()
         observeMenuRequests()
         observePasteNotifications()
+        observeMicrophonePermission()
+        observeAccessibilityPermission()
         registerHotkey()
-        verifyAccessibility()
-        warmUpServiceIfNeeded()
-        
+
         // Show onboarding on first launch
         if !preferences.hasCompletedOnboarding {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.showOnboardingWindow()
             }
+        } else {
+            // Only warm up service if onboarding is complete
+            warmUpServiceIfNeeded()
         }
     }
 
@@ -83,6 +89,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         hotkeyManager.unregister()
         serviceWarmupTask?.cancel()
         transcriptionTask?.cancel()
+        microphoneRequestTask?.cancel()
+        cancelFocusSnapshotRetry()
     }
 
     private static func makeVAD(using preferences: PreferencesStore) -> VoiceActivityDetector {
@@ -136,6 +144,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .store(in: &cancellables)
     }
 
+    private func observeMicrophonePermission() {
+        microphonePermission.refresh()
+        microphonePermission.$state
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] state in
+                guard let self else { return }
+                switch state {
+                case .authorized:
+                    self.logger.log("Microphone permission granted")
+                    self.evaluateOnboardingCompletion()
+                case .denied:
+                    self.logger.log("Microphone permission denied")
+                case .restricted:
+                    self.logger.log("Microphone permission restricted")
+                case .notDetermined:
+                    self.logger.log("Microphone permission not determined")
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func observeAccessibilityPermission() {
+        accessibilityPermission.refresh()
+        accessibilityPermission.$isTrusted
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] trusted in
+                guard let self else { return }
+                self.statusBarController.setAccessibilityPromptVisible(!trusted)
+                if trusted {
+                    self.logger.log("Accessibility permission granted")
+                } else {
+                    self.logger.log("Accessibility permission missing; auto-paste disabled until trust is granted.")
+                }
+                self.evaluateOnboardingCompletion()
+            }
+            .store(in: &cancellables)
+    }
+
     private func registerHotkey() {
         do {
             try hotkeyManager.register(config: preferences.hotkeyConfig) { [weak self] in
@@ -150,6 +198,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func handleToggle() {
+        // Don't allow hotkey to work until onboarding is complete
+        guard preferences.hasCompletedOnboarding else {
+            logger.log("Hotkey ignored: onboarding not complete")
+            showOnboardingWindow()
+            return
+        }
+
+        microphonePermission.refresh()
+        switch microphonePermission.state {
+        case .authorized:
+            break
+        case .notDetermined:
+            logger.log("Hotkey: microphone permission undetermined; requesting")
+            microphoneRequestTask?.cancel()
+            microphoneRequestTask = Task { [weak self] in
+                guard let self else { return }
+                let granted = await self.microphonePermission.requestAccess()
+                await MainActor.run {
+                    self.microphoneRequestTask = nil
+                    if granted {
+                        self.logger.log("Microphone permission granted via hotkey request; retrying toggle")
+                        self.handleToggle()
+                    } else {
+                        self.logger.log("Microphone permission denied via hotkey request")
+                        self.scheduleToast(message: "Microphone access denied. Check System Settings.")
+                        self.showOnboardingWindow()
+                    }
+                }
+            }
+            return
+        case .denied, .restricted:
+            logger.log("Hotkey: microphone permission missing or restricted")
+            scheduleToast(message: "Microphone access required. Check System Settings.")
+            showOnboardingWindow()
+            return
+        }
+
         cancelScheduledEvents()
 
         switch appState.phase {
@@ -204,12 +289,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
 
-    private func verifyAccessibility() {
-        let trusted = accessibilityManager.isTrusted(promptIfNeeded: false)
-        statusBarController.setAccessibilityPromptVisible(!trusted)
-        if !trusted {
-            logger.log("Accessibility permission missing; auto-paste disabled until trust is granted.")
-        }
+    private func evaluateOnboardingCompletion() {
+        guard !preferences.hasCompletedOnboarding else { return }
+        let microphoneReady = microphonePermission.state.isAuthorized
+        accessibilityPermission.refresh()
+        let accessibilityReady = accessibilityPermission.isTrusted
+        guard microphoneReady && accessibilityReady else { return }
+        preferences.hasCompletedOnboarding = true
+        onboardingWindowController?.close()
+        onboardingWindowController = nil
+        logger.log("Onboarding auto-completed after permissions granted")
+        warmUpServiceIfNeeded()
     }
 
     private func terminate() {
@@ -218,7 +308,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private func handleAccessibilityRequest() {
         logger.log("Accessibility prompt requested from menu")
-        _ = accessibilityManager.isTrusted(promptIfNeeded: true)
+        accessibilityPermission.requestAccess()
         recheckAccessibilityStatus(after: 1.5)
     }
 
@@ -261,6 +351,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.onboardingWindowController?.close()
             self.onboardingWindowController = nil
             self.logger.log("Onboarding completed")
+
+            // Brief delay to let macOS fully commit permission changes
+            // before starting the transcription service
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.warmUpServiceIfNeeded()
+            }
         }
         
         let hostingController = NSHostingController(rootView: onboardingView)
@@ -295,11 +391,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func recheckAccessibilityStatus(after delay: TimeInterval) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self else { return }
-            let trusted = self.accessibilityManager.isTrusted(promptIfNeeded: false)
-            self.statusBarController.setAccessibilityPromptVisible(!trusted)
-            if trusted {
-                self.logger.log("Accessibility permission granted")
-            }
+            self.accessibilityPermission.refresh()
+            self.statusBarController.setAccessibilityPromptVisible(!self.accessibilityPermission.isTrusted)
+            self.evaluateOnboardingCompletion()
         }
     }
 
@@ -366,15 +460,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         capturedSamples.removeAll(keepingCapacity: true)
         vad.reset()
-        lastFocusSnapshot = FocusSnapshot.capture()
-        if lastFocusSnapshot == nil {
-            let trusted = accessibilityManager.isTrusted(promptIfNeeded: false)
-            if trusted {
-                logger.log("Unable to capture focus snapshot despite accessibility trust; will fall back to copy-only paste.")
-            } else {
-                logger.log("Accessibility permission missing; auto-paste disabled until trust is granted.")
-            }
-        }
+        prepareFocusSnapshotBaseline()
         audioController.start()
         appState.beginListening()
         logger.debug("Entered listening phase; audio capture starting")
@@ -452,6 +538,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         vadStopTime = nil
         transcribeStartTime = nil
         lastFocusSnapshot = nil
+        cancelFocusSnapshotRetry()
     }
 
     private func handleTranscriptionError(_ error: Error) {
@@ -472,6 +559,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         vad.reset()
         isStoppingRecording = false
         lastFocusSnapshot = nil
+        cancelFocusSnapshotRetry()
         logger.debug("Returning to idle phase")
     }
 }
@@ -513,7 +601,54 @@ extension AppDelegate: AudioCaptureControllerDelegate {
         transcriptionTask?.cancel()
         transcriptionTask = nil
         lastFocusSnapshot = nil
+        cancelFocusSnapshotRetry()
         appState.resetToIdle()
         scheduleToast(message: "Microphone error.")
+    }
+}
+
+private extension AppDelegate {
+    func prepareFocusSnapshotBaseline() {
+        cancelFocusSnapshotRetry()
+        lastFocusSnapshot = FocusSnapshot.capture()
+        guard lastFocusSnapshot == nil else {
+            return
+        }
+
+        accessibilityPermission.refresh()
+        let trusted = accessibilityPermission.isTrusted
+        if trusted {
+            logger.log("Initial focus snapshot unavailable; will retry shortly")
+            scheduleFocusSnapshotRetry(attempt: 1)
+        } else {
+            logger.log("Accessibility permission missing; auto-paste disabled until trust is granted.")
+        }
+    }
+
+    func scheduleFocusSnapshotRetry(attempt: Int) {
+        guard attempt <= 3 else {
+            logger.log("Focus snapshot unavailable after \(attempt - 1, privacy: .public) retries; copy fallback will be used.")
+            focusSnapshotRetryWorkItem = nil
+            return
+        }
+
+        let delay = 0.08 * Double(attempt)
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            if let snapshot = FocusSnapshot.capture() {
+                self.lastFocusSnapshot = snapshot
+                self.logger.log("Captured focus snapshot on retry #\(attempt, privacy: .public)")
+                self.focusSnapshotRetryWorkItem = nil
+            } else {
+                self.scheduleFocusSnapshotRetry(attempt: attempt + 1)
+            }
+        }
+        focusSnapshotRetryWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    func cancelFocusSnapshotRetry() {
+        focusSnapshotRetryWorkItem?.cancel()
+        focusSnapshotRetryWorkItem = nil
     }
 }

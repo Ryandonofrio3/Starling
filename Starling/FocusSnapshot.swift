@@ -7,6 +7,7 @@
 
 import AppKit
 import ApplicationServices
+import os
 
 struct FocusSnapshot: Equatable {
     struct ElementSignature: Equatable {
@@ -44,9 +45,11 @@ struct FocusSnapshot: Equatable {
     let selectionSignature: String?
 
     private static let windowNumberAttribute: CFString = "AXWindowNumber" as CFString
+    private static let logger = Logger(subsystem: "com.starling.app", category: "FocusSnapshot")
 
     static func capture(using application: NSWorkspace = .shared) -> FocusSnapshot? {
         guard let app = application.frontmostApplication else {
+            logger.debug("Focus capture failed: no frontmost application")
             return nil
         }
 
@@ -54,6 +57,7 @@ struct FocusSnapshot: Equatable {
         var focusedElement: CFTypeRef?
         let status = AXUIElementCopyAttributeValue(appElement, kAXFocusedUIElementAttribute as CFString, &focusedElement)
         guard status == .success || status == .noValue, let elementRef = focusedElement else {
+            logger.debug("Focus capture failed for pid=\(app.processIdentifier, privacy: .public); AXError=\(status.rawValue, privacy: .public)")
             return nil
         }
         let element = unsafeBitCast(elementRef, to: AXUIElement.self)

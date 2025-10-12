@@ -108,6 +108,14 @@ final class AudioCaptureController {
     }
 
     private func configureSession() throws {
+        // Check permission right before using microphone hardware
+        let status = AVCaptureDevice.authorizationStatus(for: .audio)
+        guard status == .authorized else {
+            logger.error("Microphone permission not granted (status: \(String(describing: status), privacy: .public))")
+            throw NSError(domain: "AudioCapture", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "Microphone access required"
+            ])
+        }
         #if !os(macOS)
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
