@@ -8,7 +8,6 @@
 import Foundation
 
 struct TextNormalizer {
-    private static let minimumLengthForTerminalPunctuation = 12
     private static let punctuationCharacterSet: CharacterSet = {
         var set = CharacterSet.punctuationCharacters
         set.formUnion(.symbols)
@@ -123,10 +122,6 @@ struct TextNormalizer {
 
         if options.autoCapitalizeFirstWord {
             working = capitalizeFirstLetter(of: working)
-        }
-
-        if options.ensureTerminalPunctuation {
-            working = ensureTerminalPunctuation(in: working, minimumLength: Self.minimumLengthForTerminalPunctuation)
         }
 
         working = cleanupWhitespace(working)
@@ -349,24 +344,5 @@ struct TextNormalizer {
         let capitalized = String(result[index]).uppercased()
         result.replaceSubrange(index...index, with: capitalized)
         return result
-    }
-
-    private func ensureTerminalPunctuation(in text: String, minimumLength: Int) -> String {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Don't add punctuation if too short or already has terminal punctuation
-        guard trimmed.count >= minimumLength else {
-            return text
-        }
-        
-        // Check if already ends with terminal punctuation (including after whitespace is trimmed)
-        guard let last = trimmed.last,
-              !".?!".contains(last) else {
-            return text
-        }
-
-        // Preserve any trailing whitespace from original
-        let trailingWhitespace = String(text.reversed().prefix { $0.isWhitespace || $0.isNewline }.reversed())
-        return trimmed + "." + trailingWhitespace
     }
 }

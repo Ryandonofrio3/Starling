@@ -31,14 +31,12 @@ final class PreferencesStore: ObservableObject {
         var spokenPunctuation: Bool
         var normalizeNewlines: Bool
         var autoCapitalizeFirstWord: Bool
-        var ensureTerminalPunctuation: Bool
 
         static let `default` = TextCleanupOptions(
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: false,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
     }
 

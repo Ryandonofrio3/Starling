@@ -9,8 +9,7 @@ final class TextNormalizerTests: XCTestCase {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("first new line second", options: options)
@@ -22,8 +21,7 @@ final class TextNormalizerTests: XCTestCase {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("alpha new paragraph bravo", options: options)
@@ -35,8 +33,7 @@ final class TextNormalizerTests: XCTestCase {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("hello new line", options: options)
@@ -50,8 +47,7 @@ extension TextNormalizerTests {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("first new-line second", options: options)
@@ -63,8 +59,7 @@ extension TextNormalizerTests {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("first newline second", options: options)
@@ -76,8 +71,7 @@ extension TextNormalizerTests {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("alpha new-paragraph bravo", options: options)
@@ -89,8 +83,7 @@ extension TextNormalizerTests {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("alpha newparagraph bravo", options: options)
@@ -102,8 +95,7 @@ extension TextNormalizerTests {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("hello new line, world", options: options)
@@ -115,8 +107,7 @@ extension TextNormalizerTests {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("a new line new line b", options: options)
@@ -128,8 +119,7 @@ extension TextNormalizerTests {
             normalizeNumbers: false,
             spokenPunctuation: false,
             normalizeNewlines: true,
-            autoCapitalizeFirstWord: false,
-            ensureTerminalPunctuation: false
+            autoCapitalizeFirstWord: false
         )
 
         let result = normalizer.normalize("alpha new paragraph.", options: options)

@@ -127,12 +127,6 @@ struct PreferencesView: View {
                     ))
                     .toggleStyle(.switch)
 
-                    Toggle("Ensure terminal punctuation", isOn: Binding(
-                        get: { preferences.textCleanupOptions.ensureTerminalPunctuation },
-                        set: { preferences.textCleanupOptions.ensureTerminalPunctuation = $0 }
-                    ))
-                    .toggleStyle(.switch)
-
                     Text("Applies when options are turned on. Punctuation mapping also tidies spacing around symbols.")
                         .font(.caption)
                         .foregroundColor(.secondary)
