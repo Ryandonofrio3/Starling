@@ -57,8 +57,10 @@ final class StatusBarController {
 
     private func update(for phase: AppState.Phase) {
         let iconName = AppState.MenuIcon.from(phase: phase).rawValue
-        statusItem.button?.image = NSImage(named: iconName)
-        statusItem.button?.image?.isTemplate = true
+        if let image = NSImage(named: iconName) {
+            image.isTemplate = true
+            statusItem.button?.image = image
+        }
         statusItem.button?.appearsDisabled = (phase == .transcribing)
 
         switch phase {

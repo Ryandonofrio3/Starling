@@ -36,9 +36,9 @@ final class AppState: ObservableObject {
     }
 
     enum MenuIcon: String {
-        case idle = "BirdIdle"
-        case listening = "BirdListening"
-        case transcribing = "BirdTranscribing"
+        case idle = "MenuBarIdle"
+        case listening = "MenuBarListening"
+        case transcribing = "MenuBarTranscribing"
 
         static func from(phase: Phase) -> MenuIcon {
             switch phase {
