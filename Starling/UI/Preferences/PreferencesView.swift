@@ -12,18 +12,35 @@ struct PreferencesView: View {
     @EnvironmentObject private var preferences: PreferencesStore
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Starling Preferences")
-                .font(.title2)
-                .bold()
-            
-            Divider()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Starling Preferences")
+                    .font(.title2)
+                    .bold()
+                
+                Divider()
 
-            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 16) {
                 Text("Hotkey")
                     .font(.headline)
                 
                 HotkeyRecorderView(hotkeyConfig: $preferences.hotkeyConfig)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Activation Mode")
+                        .font(.subheadline)
+
+                    Picker("Activation Mode", selection: $preferences.recordingMode) {
+                        ForEach(PreferencesStore.RecordingMode.allCases, id: \.self) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text("Toggle starts and stops with a press. Hold to Talk records only while the hotkey is held.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 
                 Text("Press the button and type your desired hotkey combination. Requires ⌘, ⌃, or ⌥.")
                     .font(.caption)
@@ -38,6 +55,24 @@ struct PreferencesView: View {
                 Toggle("Keep transcript on clipboard after auto-paste", isOn: $preferences.keepTranscriptOnClipboard)
                     .toggleStyle(.switch)
                     .help("When disabled, the previous clipboard contents are restored after auto-paste. Copy fallback always keeps the transcript available.")
+
+                Toggle("Force plain text only", isOn: $preferences.forcePlainTextOnly)
+                    .toggleStyle(.switch)
+                    .help("When enabled, Starling writes only plain text to the clipboard and clears other formats.")
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Auto-clear clipboard")
+                        .font(.subheadline)
+
+                    Picker("Auto-clear clipboard", selection: $preferences.clipboardAutoClear) {
+                        ForEach(PreferencesStore.ClipboardAutoClear.allCases, id: \.self) { option in
+                            Text(option.displayName).tag(option)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .disabled(!preferences.keepTranscriptOnClipboard)
+                    .help("Automatically clears the clipboard after the selected delay when Starling leaves the transcript there.")
+                }
                 
                 Divider()
                     .padding(.vertical, 4)
@@ -48,7 +83,7 @@ struct PreferencesView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Trailing Silence Duration")
                         .font(.subheadline)
-                    
+
                     HStack {
                         Slider(value: $preferences.trailingSilenceDuration, in: 0.3...1.5, step: 0.05)
                         Text("\(preferences.trailingSilenceDuration, format: .number.precision(.fractionLength(2))) s")
@@ -60,11 +95,53 @@ struct PreferencesView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+
+                Divider()
+                    .padding(.vertical, 4)
+
+                Text("Text Cleanup")
+                    .font(.headline)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Normalize spoken numbers", isOn: Binding(
+                        get: { preferences.textCleanupOptions.normalizeNumbers },
+                        set: { preferences.textCleanupOptions.normalizeNumbers = $0 }
+                    ))
+                    .toggleStyle(.switch)
+
+                    Toggle("Spoken punctuation → symbols", isOn: Binding(
+                        get: { preferences.textCleanupOptions.spokenPunctuation },
+                        set: { preferences.textCleanupOptions.spokenPunctuation = $0 }
+                    ))
+                    .toggleStyle(.switch)
+
+                    Toggle("“New line” / “new paragraph”", isOn: Binding(
+                        get: { preferences.textCleanupOptions.normalizeNewlines },
+                        set: { preferences.textCleanupOptions.normalizeNewlines = $0 }
+                    ))
+                    .toggleStyle(.switch)
+
+                    Toggle("Auto-capitalize first letter", isOn: Binding(
+                        get: { preferences.textCleanupOptions.autoCapitalizeFirstWord },
+                        set: { preferences.textCleanupOptions.autoCapitalizeFirstWord = $0 }
+                    ))
+                    .toggleStyle(.switch)
+
+                    Toggle("Ensure terminal punctuation", isOn: Binding(
+                        get: { preferences.textCleanupOptions.ensureTerminalPunctuation },
+                        set: { preferences.textCleanupOptions.ensureTerminalPunctuation = $0 }
+                    ))
+                    .toggleStyle(.switch)
+
+                    Text("Applies when options are turned on. Punctuation mapping also tidies spacing around symbols.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            
-            Spacer()
+            }
+            .padding(24)
         }
-        .padding(24)
         .frame(width: 480, height: 480)
     }
 }

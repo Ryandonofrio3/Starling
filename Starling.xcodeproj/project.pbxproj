@@ -11,7 +11,7 @@
 		271B6689919B606517C5EC74 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE6ECB674A3D303EB80F907 /* OnboardingView.swift */; };
 		3089223CCA0CCC80E3548143 /* VoiceActivityDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568CC81FDF6B09FA095E334E /* VoiceActivityDetector.swift */; };
 		41EBFD191595D1913D380563 /* FocusSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189C3128CE605EE287F9EBF9 /* FocusSnapshot.swift */; };
-		50285D87632C5E44FB633D84 /* AccessibilityPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0D7F3EA5508268B8559AF8 /* AccessibilityPermissionManager.swift */; };
+		50285D87632C5E44FB633D84 /* AccessibilityPermissionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0D7F3EA5508268B8559AF8 /* AccessibilityPermissionMonitor.swift */; };
 		58297313615B464F44FA3779 /* AudioCaptureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B983B023B14767BFC6741C9 /* AudioCaptureController.swift */; };
 		5F9B8E1E2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F9B8E1D2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift */; };
 		602709DB37BDC4149A0815C7 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2359911BA86E42842D4DCEBA /* StatusBarController.swift */; };
@@ -20,14 +20,20 @@
 		8BF338BE2E9AC61100FF9F32 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BF338BD2E9AC61100FF9F32 /* ContentView.swift */; };
 		8BF338C02E9AC61300FF9F32 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8BF338BF2E9AC61300FF9F32 /* Assets.xcassets */; };
 		8BF338C32E9AC61300FF9F32 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8BF338C22E9AC61300FF9F32 /* Preview Assets.xcassets */; };
-		A1D90C4E2ABD0152008F00A1 /* StarlingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D90C4D2ABD0152008F00A1 /* StarlingService.swift */; };
+		A1D90C4E2ABD0152008F00A1 /* ParakeetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D90C4D2ABD0152008F00A1 /* ParakeetService.swift */; };
 		A1D90C502ABD0152008F00A1 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = A1D90C4F2ABD0152008F00A1 /* FluidAudio */; };
 		A1D90C532ABD05BF008F00A1 /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D90C522ABD05BF008F00A1 /* PreferencesStore.swift */; };
 		A1D90C552ABD08B4008F00A1 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D90C542ABD08B4008F00A1 /* PreferencesView.swift */; };
 		F24B67474563514A0F38E09F /* PasteController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82F6B062C27C3FE56D040B18 /* PasteController.swift */; };
 		FDCA38EF730BFF6FCED03021 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5F2B9204B6CC1B7798BACB0 /* HotkeyManager.swift */; };
 		FE418F09D70D317850696BBF /* HUDWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAD9D4CD5984C0848FA3DF63 /* HUDWindowController.swift */; };
+		AAE0D7C72EA3210000010013 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE0D7C62EA3210000010012 /* AppDelegate.swift */; };
+		AAE0D7C92EA3210000010015 /* AudioCaptureConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE0D7C82EA3210000010014 /* AudioCaptureConfiguration.swift */; };
+		AAE0D7CB2EA3210000010017 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE0D7CA2EA3210000010016 /* RecordingCoordinator.swift */; };
+		AAE0D7CD2EA3210000010019 /* ToastPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE0D7CC2EA3210000010018 /* ToastPresenter.swift */; };
+		AAE0D7CF2EA321000001001B /* TextNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE0D7CE2EA321000001001A /* TextNormalizer.swift */; };
 /* End PBXBuildFile section */
+
 
 /* Begin PBXFileReference section */
 		189C3128CE605EE287F9EBF9 /* FocusSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSnapshot.swift; sourceTree = "<group>"; };
@@ -44,8 +50,13 @@
 		8BF338BF2E9AC61300FF9F32 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8BF338C22E9AC61300FF9F32 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		8BF338C42E9AC61300FF9F32 /* Starling.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Starling.entitlements; sourceTree = "<group>"; };
-		9F0D7F3EA5508268B8559AF8 /* AccessibilityPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionManager.swift; sourceTree = "<group>"; };
-		A1D90C4D2ABD0152008F00A1 /* StarlingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarlingService.swift; sourceTree = "<group>"; };
+		AAE0D7C62EA3210000010012 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AAE0D7C82EA3210000010014 /* AudioCaptureConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureConfiguration.swift; sourceTree = "<group>"; };
+		AAE0D7CA2EA3210000010016 /* RecordingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCoordinator.swift; sourceTree = "<group>"; };
+		AAE0D7CC2EA3210000010018 /* ToastPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPresenter.swift; sourceTree = "<group>"; };
+		AAE0D7CE2EA321000001001A /* TextNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextNormalizer.swift; sourceTree = "<group>"; };
+		9F0D7F3EA5508268B8559AF8 /* AccessibilityPermissionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionMonitor.swift; sourceTree = "<group>"; };
+		A1D90C4D2ABD0152008F00A1 /* ParakeetService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParakeetService.swift; sourceTree = "<group>"; };
 		A1D90C522ABD05BF008F00A1 /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
 		A1D90C542ABD08B4008F00A1 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		BBC6DF63614DE8C35E18F3EA /* AudioChunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioChunk.swift; sourceTree = "<group>"; };
@@ -65,49 +76,158 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		8BF338AF2E9AC61100FF9F32 = {
-			isa = PBXGroup;
-			children = (
-				8BF338BA2E9AC61100FF9F32 /* Starling */,
-				8BF338B92E9AC61100FF9F32 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
-		8BF338B92E9AC61100FF9F32 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				8BF338B82E9AC61100FF9F32 /* Starling.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
+	8BF338AF2E9AC61100FF9F32 = {
+		isa = PBXGroup;
+		children = (
+			8BF338BA2E9AC61100FF9F32 /* Starling */,
+			8BF338B92E9AC61100FF9F32 /* Products */,
+		);
+		sourceTree = "<group>";
+	};
+	8BF338B92E9AC61100FF9F32 /* Products */ = {
+		isa = PBXGroup;
+		children = (
+			8BF338B82E9AC61100FF9F32 /* Starling.app */,
+		);
+		name = Products;
+		sourceTree = "<group>";
+	};
 		8BF338BA2E9AC61100FF9F32 /* Starling */ = {
 			isa = PBXGroup;
 			children = (
-				8BF338BB2E9AC61100FF9F32 /* StarlingApp.swift */,
-				7C3095A08BB810A034C82CD4 /* AppState.swift */,
-				2B983B023B14767BFC6741C9 /* AudioCaptureController.swift */,
-				BBC6DF63614DE8C35E18F3EA /* AudioChunk.swift */,
-				D5F2B9204B6CC1B7798BACB0 /* HotkeyManager.swift */,
-				2359911BA86E42842D4DCEBA /* StatusBarController.swift */,
-				CAD9D4CD5984C0848FA3DF63 /* HUDWindowController.swift */,
-				9F0D7F3EA5508268B8559AF8 /* AccessibilityPermissionManager.swift */,
-				189C3128CE605EE287F9EBF9 /* FocusSnapshot.swift */,
-				82F6B062C27C3FE56D040B18 /* PasteController.swift */,
-				568CC81FDF6B09FA095E334E /* VoiceActivityDetector.swift */,
-				A1D90C522ABD05BF008F00A1 /* PreferencesStore.swift */,
-				A1D90C542ABD08B4008F00A1 /* PreferencesView.swift */,
-				A1D90C4D2ABD0152008F00A1 /* StarlingService.swift */,
-				8BF338BD2E9AC61100FF9F32 /* ContentView.swift */,
+				AAE0D7B52EA3210000010001 /* Application */,
+				AAE0D7B62EA3210000010002 /* Audio */,
+				AAE0D7B72EA3210000010003 /* Permissions */,
+				AAE0D7B82EA3210000010004 /* Paste */,
+				AAE0D7B92EA3210000010005 /* Preferences */,
+				AAE0D7BA2EA3210000010006 /* Transcription */,
+				AAE0D7BB2EA3210000010007 /* UI */,
+				AAE0D7C12EA321000001000D /* Support */,
 				8BF338BF2E9AC61300FF9F32 /* Assets.xcassets */,
 				8BF338C42E9AC61300FF9F32 /* Starling.entitlements */,
 				8BF338C12E9AC61300FF9F32 /* Preview Content */,
-				5F9B8E1D2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift */,
-				6AE6ECB674A3D303EB80F907 /* OnboardingView.swift */,
 			);
 			path = Starling;
 			sourceTree = "<group>";
 		};
+		AAE0D7B52EA3210000010001 /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				AAE0D7C62EA3210000010012 /* AppDelegate.swift */,
+				8BF338BB2E9AC61100FF9F32 /* StarlingApp.swift */,
+				7C3095A08BB810A034C82CD4 /* AppState.swift */,
+				D5F2B9204B6CC1B7798BACB0 /* HotkeyManager.swift */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
+		AAE0D7B62EA3210000010002 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				AAE0D7C82EA3210000010014 /* AudioCaptureConfiguration.swift */,
+				2B983B023B14767BFC6741C9 /* AudioCaptureController.swift */,
+				BBC6DF63614DE8C35E18F3EA /* AudioChunk.swift */,
+				568CC81FDF6B09FA095E334E /* VoiceActivityDetector.swift */,
+				AAE0D7CA2EA3210000010016 /* RecordingCoordinator.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		AAE0D7B72EA3210000010003 /* Permissions */ = {
+			isa = PBXGroup;
+			children = (
+				9F0D7F3EA5508268B8559AF8 /* AccessibilityPermissionMonitor.swift */,
+				5F9B8E1D2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift */,
+			);
+			path = Permissions;
+			sourceTree = "<group>";
+		};
+		AAE0D7B82EA3210000010004 /* Paste */ = {
+			isa = PBXGroup;
+			children = (
+				189C3128CE605EE287F9EBF9 /* FocusSnapshot.swift */,
+				82F6B062C27C3FE56D040B18 /* PasteController.swift */,
+			);
+			path = Paste;
+			sourceTree = "<group>";
+		};
+		AAE0D7B92EA3210000010005 /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				A1D90C522ABD05BF008F00A1 /* PreferencesStore.swift */,
+			);
+			path = Preferences;
+			sourceTree = "<group>";
+		};
+		AAE0D7BA2EA3210000010006 /* Transcription */ = {
+			isa = PBXGroup;
+			children = (
+				A1D90C4D2ABD0152008F00A1 /* ParakeetService.swift */,
+			);
+			path = Transcription;
+			sourceTree = "<group>";
+		};
+		AAE0D7BB2EA3210000010007 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				AAE0D7BC2EA3210000010008 /* HUD */,
+				AAE0D7BD2EA3210000010009 /* MenuBar */,
+				AAE0D7BE2EA321000001000A /* Onboarding */,
+				AAE0D7BF2EA321000001000B /* Preferences */,
+				AAE0D7C02EA321000001000C /* Root */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		AAE0D7BC2EA3210000010008 /* HUD */ = {
+			isa = PBXGroup;
+			children = (
+				CAD9D4CD5984C0848FA3DF63 /* HUDWindowController.swift */,
+			);
+			path = HUD;
+			sourceTree = "<group>";
+		};
+		AAE0D7BD2EA3210000010009 /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				2359911BA86E42842D4DCEBA /* StatusBarController.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		AAE0D7BE2EA321000001000A /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				6AE6ECB674A3D303EB80F907 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		AAE0D7BF2EA321000001000B /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				A1D90C542ABD08B4008F00A1 /* PreferencesView.swift */,
+			);
+			path = Preferences;
+			sourceTree = "<group>";
+		};
+		AAE0D7C02EA321000001000C /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				8BF338BD2E9AC61100FF9F32 /* ContentView.swift */,
+			);
+			path = Root;
+			sourceTree = "<group>";
+		};
+	AAE0D7C12EA321000001000D /* Support */ = {
+		isa = PBXGroup;
+		children = (
+			AAE0D7CE2EA321000001001A /* TextNormalizer.swift */,
+			AAE0D7CC2EA3210000010018 /* ToastPresenter.swift */,
+		);
+		path = Support;
+		sourceTree = "<group>";
+	};
 		8BF338C12E9AC61300FF9F32 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
@@ -119,26 +239,26 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8BF338B72E9AC61100FF9F32 /* Starling */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 8BF338C72E9AC61300FF9F32 /* Build configuration list for PBXNativeTarget "Starling" */;
-			buildPhases = (
-				8BF338B42E9AC61100FF9F32 /* Sources */,
-				8BF338B52E9AC61100FF9F32 /* Frameworks */,
-				8BF338B62E9AC61100FF9F32 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = Starling;
-			packageProductDependencies = (
-				A1D90C4F2ABD0152008F00A1 /* FluidAudio */,
-			);
-			productName = Starling;
-			productReference = 8BF338B82E9AC61100FF9F32 /* Starling.app */;
-			productType = "com.apple.product-type.application";
-		};
+	8BF338B72E9AC61100FF9F32 /* Starling */ = {
+		isa = PBXNativeTarget;
+		buildConfigurationList = 8BF338C72E9AC61300FF9F32 /* Build configuration list for PBXNativeTarget "Starling" */;
+		buildPhases = (
+			8BF338B42E9AC61100FF9F32 /* Sources */,
+			8BF338B52E9AC61100FF9F32 /* Frameworks */,
+			8BF338B62E9AC61100FF9F32 /* Resources */,
+		);
+		buildRules = (
+		);
+		dependencies = (
+		);
+		name = Starling;
+		packageProductDependencies = (
+			A1D90C4F2ABD0152008F00A1 /* FluidAudio */,
+		);
+		productName = Starling;
+		productReference = 8BF338B82E9AC61100FF9F32 /* Starling.app */;
+		productType = "com.apple.product-type.application";
+	};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -162,11 +282,11 @@
 				en,
 				Base,
 			);
-			mainGroup = 8BF338AF2E9AC61100FF9F32;
-			packageReferences = (
-				A1D90C512ABD0152008F00A1 /* XCRemoteSwiftPackageReference "FluidAudio" */,
-			);
-			productRefGroup = 8BF338B92E9AC61100FF9F32 /* Products */;
+		mainGroup = 8BF338AF2E9AC61100FF9F32;
+		packageReferences = (
+			A1D90C512ABD0152008F00A1 /* XCRemoteSwiftPackageReference "FluidAudio" */,
+		);
+		productRefGroup = 8BF338B92E9AC61100FF9F32 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -187,14 +307,18 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+
 /* Begin PBXSourcesBuildPhase section */
 		8BF338B42E9AC61100FF9F32 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				58297313615B464F44FA3779 /* AudioCaptureController.swift in Sources */,
+				AAE0D7C92EA3210000010015 /* AudioCaptureConfiguration.swift in Sources */,
 				24C269B547242176B541AE49 /* AudioChunk.swift in Sources */,
+				AAE0D7CB2EA3210000010017 /* RecordingCoordinator.swift in Sources */,
 				77CE9C280AC50884995E7FBF /* AppState.swift in Sources */,
+				AAE0D7C72EA3210000010013 /* AppDelegate.swift in Sources */,
 				FDCA38EF730BFF6FCED03021 /* HotkeyManager.swift in Sources */,
 				602709DB37BDC4149A0815C7 /* StatusBarController.swift in Sources */,
 				3089223CCA0CCC80E3548143 /* VoiceActivityDetector.swift in Sources */,
@@ -204,10 +328,12 @@
 				A1D90C532ABD05BF008F00A1 /* PreferencesStore.swift in Sources */,
 				A1D90C552ABD08B4008F00A1 /* PreferencesView.swift in Sources */,
 				FE418F09D70D317850696BBF /* HUDWindowController.swift in Sources */,
-				50285D87632C5E44FB633D84 /* AccessibilityPermissionManager.swift in Sources */,
+				50285D87632C5E44FB633D84 /* AccessibilityPermissionMonitor.swift in Sources */,
 				8BF338BE2E9AC61100FF9F32 /* ContentView.swift in Sources */,
 				5F9B8E1E2EC0E2B6000F4C9C /* MicrophonePermissionMonitor.swift in Sources */,
 				8BF338BC2E9AC61100FF9F32 /* StarlingApp.swift in Sources */,
+				AAE0D7CD2EA3210000010019 /* ToastPresenter.swift in Sources */,
+				AAE0D7CF2EA321000001001B /* TextNormalizer.swift in Sources */,
 				271B6689919B606517C5EC74 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -362,35 +488,68 @@
 			};
 			name = Debug;
 		};
-		8BF338C92E9AC61300FF9F32 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Starling/Starling.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Starling/Preview Content\"";
-				DEVELOPMENT_TEAM = VZ868QXY25;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Starling needs microphone access to transcribe speech.";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.starling.app;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
+	8BF338C92E9AC61300FF9F32 /* Release */ = {
+		isa = XCBuildConfiguration;
+		buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+			CODE_SIGN_ENTITLEMENTS = Starling/Starling.entitlements;
+			CODE_SIGN_STYLE = Automatic;
+			COMBINE_HIDPI_IMAGES = YES;
+			CURRENT_PROJECT_VERSION = 1;
+			DEVELOPMENT_ASSET_PATHS = "\"Starling/Preview Content\"";
+			DEVELOPMENT_TEAM = VZ868QXY25;
+			ENABLE_HARDENED_RUNTIME = YES;
+			ENABLE_PREVIEWS = YES;
+			GENERATE_INFOPLIST_FILE = YES;
+			INFOPLIST_KEY_LSUIElement = YES;
+			INFOPLIST_KEY_NSHumanReadableCopyright = "";
+			INFOPLIST_KEY_NSMicrophoneUsageDescription = "Starling needs microphone access to transcribe speech.";
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/../Frameworks",
+			);
+			MARKETING_VERSION = 1.0;
+			PRODUCT_BUNDLE_IDENTIFIER = com.starling.app;
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_EMIT_LOC_STRINGS = YES;
+			SWIFT_VERSION = 5.0;
 		};
+		name = Release;
+	};
+	AAE0D7D32EA321000001001F /* Debug */ = {
+		isa = XCBuildConfiguration;
+		buildSettings = {
+			BUNDLE_LOADER = "$(TEST_HOST)";
+			CODE_SIGN_STYLE = Automatic;
+			DEVELOPMENT_TEAM = VZ868QXY25;
+			GENERATE_INFOPLIST_FILE = YES;
+			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+			MACOSX_DEPLOYMENT_TARGET = 14.1;
+			PRODUCT_BUNDLE_IDENTIFIER = "com.starling.StarlingTests";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+			SWIFT_VERSION = 5.0;
+			TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Starling.app/Contents/MacOS/Starling";
+		};
+		name = Debug;
+	};
+	AAE0D7D42EA3210000010020 /* Release */ = {
+		isa = XCBuildConfiguration;
+		buildSettings = {
+			BUNDLE_LOADER = "$(TEST_HOST)";
+			CODE_SIGN_STYLE = Automatic;
+			DEVELOPMENT_TEAM = VZ868QXY25;
+			GENERATE_INFOPLIST_FILE = YES;
+			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+			MACOSX_DEPLOYMENT_TARGET = 14.1;
+			PRODUCT_BUNDLE_IDENTIFIER = "com.starling.StarlingTests";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_VERSION = 5.0;
+			TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Starling.app/Contents/MacOS/Starling";
+		};
+		name = Release;
+	};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -403,15 +562,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8BF338C72E9AC61300FF9F32 /* Build configuration list for PBXNativeTarget "Starling" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				8BF338C82E9AC61300FF9F32 /* Debug */,
-				8BF338C92E9AC61300FF9F32 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
+	8BF338C72E9AC61300FF9F32 /* Build configuration list for PBXNativeTarget "Starling" */ = {
+		isa = XCConfigurationList;
+		buildConfigurations = (
+			8BF338C82E9AC61300FF9F32 /* Debug */,
+			8BF338C92E9AC61300FF9F32 /* Release */,
+		);
+		defaultConfigurationIsVisible = 0;
+		defaultConfigurationName = Release;
+	};
+	AAE0D7DB2EA3210000010026 /* Build configuration list for PBXNativeTarget "StarlingTests" */ = {
+		isa = XCConfigurationList;
+		buildConfigurations = (
+			AAE0D7D32EA321000001001F /* Debug */,
+			AAE0D7D42EA3210000010020 /* Release */,
+		);
+		defaultConfigurationIsVisible = 0;
+		defaultConfigurationName = Debug;
+	};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */

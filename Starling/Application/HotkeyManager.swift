@@ -90,10 +90,11 @@ enum HotkeyError: Error {
 final class HotkeyManager {
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandlerRef: EventHandlerRef?
-    private var handler: (() -> Void)?
+    private var keyDownHandler: (() -> Void)?
+    private var keyUpHandler: (() -> Void)?
 
-    func register(config: HotkeyConfig, handler: @escaping () -> Void) throws {
-        try registerHotkey(keyCode: config.keyCode, modifiers: config.modifiers, handler: handler)
+    func register(config: HotkeyConfig, onKeyDown: @escaping () -> Void, onKeyUp: (() -> Void)? = nil) throws {
+        try registerHotkey(keyCode: config.keyCode, modifiers: config.modifiers, onKeyDown: onKeyDown, onKeyUp: onKeyUp)
     }
 
     func unregister() {
@@ -106,17 +107,24 @@ final class HotkeyManager {
             RemoveEventHandler(eventHandlerRef)
         }
         eventHandlerRef = nil
-        handler = nil
+        keyDownHandler = nil
+        keyUpHandler = nil
     }
 
     deinit {
         unregister()
     }
 
-    private func registerHotkey(keyCode: UInt32, modifiers: UInt32, handler: @escaping () -> Void) throws {
+    private func registerHotkey(
+        keyCode: UInt32,
+        modifiers: UInt32,
+        onKeyDown: @escaping () -> Void,
+        onKeyUp: (() -> Void)?
+    ) throws {
         unregister()
 
-        self.handler = handler
+        keyDownHandler = onKeyDown
+        keyUpHandler = onKeyUp
 
         var hotKeyRef: EventHotKeyRef?
         let hotKeyID = EventHotKeyID(signature: Self.signature, id: Self.identifier)
@@ -126,8 +134,25 @@ final class HotkeyManager {
         }
         self.hotKeyRef = hotKeyRef
 
-        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        let installStatus = InstallEventHandler(GetApplicationEventTarget(), Self.eventCallback, 1, &eventType, UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()), &eventHandlerRef)
+        let eventTypes = [
+            EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed)),
+            EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))
+        ]
+        let installStatus = eventTypes.withUnsafeBufferPointer { buffer -> OSStatus in
+            guard let baseAddress = buffer.baseAddress else {
+                return OSStatus(paramErr)
+            }
+
+            let typeCount = buffer.count
+            return InstallEventHandler(
+                GetApplicationEventTarget(),
+                Self.eventCallback,
+                typeCount,
+                baseAddress,
+                UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque()),
+                &eventHandlerRef
+            )
+        }
         guard installStatus == noErr else {
             unregister()
             throw HotkeyError.installationFailed(installStatus)
@@ -146,8 +171,15 @@ final class HotkeyManager {
         var hotKeyID = EventHotKeyID()
         let status = GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
 
-        if status == noErr, hotKeyID.signature == signature, hotKeyID.id == identifier {
-            manager.handler?()
+        guard status == noErr, hotKeyID.signature == signature, hotKeyID.id == identifier else {
+            return noErr
+        }
+
+        let kind = GetEventKind(event)
+        if kind == UInt32(kEventHotKeyPressed) {
+            manager.keyDownHandler?()
+        } else if kind == UInt32(kEventHotKeyReleased) {
+            manager.keyUpHandler?()
         }
 
         return noErr

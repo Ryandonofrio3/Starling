@@ -1,0 +1,7 @@
+--maxwidth 120
+--wraparguments after-first
+--wrapcollections before-first
+--indent 4
+--stripunusedargs closure-only
+--stripunusedlocals
+--trailingcommas

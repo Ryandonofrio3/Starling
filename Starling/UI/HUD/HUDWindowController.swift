@@ -10,11 +10,13 @@ import Combine
 import SwiftUI
 
 @MainActor
-final class HUDWindowController {
+final class HUDWindowController: NSObject {
     private let panel: NonActivatingPanel
     private let hostingView: NSHostingView<HUDView>
     private var cancellables = Set<AnyCancellable>()
     private let appState: AppState
+    private let defaults = UserDefaults.standard
+    private static let frameDefaultsKey = "com.starling.hud.panelFrame"
 
     init(appState: AppState) {
         self.appState = appState
@@ -30,10 +32,16 @@ final class HUDWindowController {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.titleVisibility = .hidden
+        panel.isMovableByWindowBackground = true
 
         hostingView = NSHostingView(rootView: HUDView(phase: .idle))
         hostingView.frame = NSRect(origin: .zero, size: contentSize)
         panel.contentView = hostingView
+
+        super.init()
+
+        panel.delegate = self
+        applyInitialFrame()
 
         observeState()
     }
@@ -55,18 +63,32 @@ final class HUDWindowController {
             panel.orderOut(nil)
         default:
             if panel.isVisible == false {
-                positionPanel()
+                applyInitialFrame()
                 panel.orderFrontRegardless()
+            } else {
+                ensurePanelWithinVisibleSpace()
             }
-            // Keep the panel in sync with the main screen if users move displays.
-            positionPanel()
         }
     }
 
-    private func positionPanel() {
-        guard let screen = NSScreen.main else {
+    private func applyInitialFrame() {
+        if !restoreSavedFrame() {
+            positionPanelAtDefaultLocation()
+        }
+    }
+
+    private func ensurePanelWithinVisibleSpace() {
+        guard let adjusted = adjustedFrameIfNeeded(for: panel.frame) else {
+            positionPanelAtDefaultLocation()
             return
         }
+        if adjusted != panel.frame {
+            panel.setFrame(adjusted, display: false)
+        }
+    }
+
+    private func positionPanelAtDefaultLocation() {
+        guard let screen = NSScreen.main else { return }
         let margin: CGFloat = 24
         let panelSize = panel.frame.size
         let screenFrame = screen.visibleFrame
@@ -74,13 +96,67 @@ final class HUDWindowController {
             x: screenFrame.midX - panelSize.width * 0.5,
             y: screenFrame.maxY - panelSize.height - margin
         )
-        panel.setFrame(NSRect(origin: origin, size: panelSize), display: false)
+        let frame = NSRect(origin: origin, size: panelSize)
+        panel.setFrame(frame, display: false)
+        defaults.set(NSStringFromRect(frame), forKey: Self.frameDefaultsKey)
+    }
+
+    @discardableResult
+    private func restoreSavedFrame() -> Bool {
+        guard let stored = defaults.string(forKey: Self.frameDefaultsKey) else {
+            return false
+        }
+
+        let rect = NSRectFromString(stored)
+        guard let adjusted = adjustedFrameIfNeeded(for: rect) else {
+            return false
+        }
+
+        panel.setFrame(adjusted, display: false)
+        return true
+    }
+
+    private func adjustedFrameIfNeeded(for frame: NSRect) -> NSRect? {
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else {
+            return nil
+        }
+
+        if screens.contains(where: { $0.visibleFrame.intersects(frame) }) {
+            return frame
+        }
+
+        return nil
+    }
+
+    private func persistCurrentFrame() {
+        guard panel.isVisible else { return }
+        defaults.set(NSStringFromRect(panel.frame), forKey: Self.frameDefaultsKey)
+    }
+}
+
+@MainActor
+extension HUDWindowController: NSWindowDelegate {
+    func windowDidMove(_ notification: Notification) {
+        persistCurrentFrame()
+    }
+
+    func windowDidEndLiveResize(_ notification: Notification) {
+        persistCurrentFrame()
     }
 }
 
 private final class NonActivatingPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+
+    override func mouseDown(with event: NSEvent) {
+        if event.type == .leftMouseDown {
+            performDrag(with: event)
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
 }
 
 private struct HUDView: View {

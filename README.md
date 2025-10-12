@@ -1,4 +1,4 @@
-# Starling 🦜
+# Starling 
 
 **Voice-to-text transcription that pastes automatically at your cursor.**
 
@@ -10,19 +10,18 @@ Starling is a lightweight macOS menu bar app that lets you dictate text anywhere
 
 ---
 
-## ✨ Features
+## Features
 
 - **Global Hotkey** — Press `⌃⌥⌘J` (customizable) to start/stop recording
 - **Voice Activity Detection** — Automatically stops when you finish speaking
 - **Local Transcription** — Uses Parakeet v3 Core ML (via [FluidAudio](https://github.com/FluidInference/FluidAudio)) running on your Mac's Neural Engine
 - **Smart Paste** — Automatically pastes transcribed text at your cursor without stealing focus
 - **Privacy First** — No audio leaves your Mac; models cache locally in `~/Library/Caches/`
-- **Secure Input Handling** — Falls back to clipboard copy for password fields
-- **Menu Bar HUD** — Visual feedback shows listening/transcribing states
+
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -39,6 +38,9 @@ brew install starling
 2. Drag `Starling.app` to `/Applications`
 3. Open the app — it runs in your menu bar (look for the bird 🦜)
 
+## Note:
+After download, it will warn you that the app is not from the App Store. Go to System Settings -> Privacy & Security and scroll down to Starling and click "Allow".
+
 ### First Launch Setup
 
 The app will guide you through a quick onboarding:
@@ -50,13 +52,13 @@ The app will guide you through a quick onboarding:
 ### Usage
 
 1. Press **`⌃⌥⌘J`** (or your custom hotkey) to start recording
-2. **Speak** — the menu bar bird glows while listening
+2. **Speak** — the bird glows while listening
 3. **Stop naturally** — VAD detects when you finish, or press the hotkey again to stop manually
-4. **Text pastes automatically** at your cursor (or copies to clipboard if in a secure field)
+4. **Text pastes automatically** at your cursor (or copies to clipboard)
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Access preferences from the menu bar bird icon:
 
@@ -66,7 +68,7 @@ Access preferences from the menu bar bird icon:
 
 ---
 
-## 🔒 Privacy & Security
+## Privacy & Security
 
 - **Local Processing** — All transcription happens on your Mac via Core ML + Neural Engine
 - **No Network Calls** — After initial model download, app works fully offline
@@ -76,7 +78,7 @@ Access preferences from the menu bar bird icon:
 
 ---
 
-## 🎯 System Requirements
+## System Requirements
 
 - **macOS 14.0** (Sonoma) or later
 - **Apple Silicon** (M1/M2/M3) or Intel Mac with Neural Engine support
@@ -85,7 +87,7 @@ Access preferences from the menu bar bird icon:
 
 ---
 
-## 🏗️ Building from Source
+## Building from Source
 
 ### Prerequisites
 
@@ -116,19 +118,9 @@ xcodebuild -scheme Starling -configuration Release build
 
 ---
 
-## 🧪 Architecture Overview
 
-- **Swift + SwiftUI** — Native macOS app (LSUIElement = menu bar only, no Dock icon)
-- **Global Hotkey** — Carbon `RegisterEventHotKey` for system-wide shortcuts
-- **Audio Capture** — `AVAudioEngine` capturing 16 kHz mono
-- **Voice Activity Detection** — Custom RMS-based VAD with configurable trailing silence
-- **Transcription** — [FluidAudio](https://github.com/FluidInference/FluidAudio) wrapping Parakeet v3 Core ML models
-- **Paste Automation** — `NSPasteboard` + `CGEvent` to simulate `⌘V` keystrokes
-- **Focus Tracking** — Accessibility API to detect secure input and cursor position
 
----
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### App doesn't paste automatically
 
@@ -138,7 +130,7 @@ xcodebuild -scheme Starling -configuration Release build
 ### Model download is slow or stuck
 
 - **First launch only** — Model download (~2.5 GB) requires a stable internet connection
-- **Check progress** — Menu bar bird shows download status
+- **Check progress** — Bird shows download status
 - **Clear cache** — If download fails, quit app and run: `rm -rf ~/Library/Caches/FluidAudio/`
 
 ### Hotkey doesn't work
@@ -155,7 +147,7 @@ xcodebuild -scheme Starling -configuration Release build
 
 ---
 
-## 📋 Known Limitations
+## Known Limitations
 
 - **English-first** — Parakeet v3 supports 25 languages but is optimized for English
 - **No streaming** — Transcription happens after you stop speaking (no live text yet)
@@ -164,7 +156,7 @@ xcodebuild -scheme Starling -configuration Release build
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Streaming transcription (pending FluidAudio partial results support)
 - [ ] Custom model management (clear cache, view size, switch versions)
@@ -175,7 +167,7 @@ xcodebuild -scheme Starling -configuration Release build
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please open an issue or PR for:
 
@@ -188,13 +180,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-## 📄 License
+## License
 
 MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **[FluidAudio](https://github.com/FluidInference/FluidAudio)** — Swift wrapper for Parakeet ASR models
 - **[NVIDIA Parakeet](https://huggingface.co/nvidia/parakeet-tdt-1.1b)** — Underlying speech recognition model
@@ -202,11 +194,9 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 📬 Contact
+## Contact
 
 Have feedback or questions? Open an issue on [GitHub](https://github.com/Ryandonofrio3/starling/issues).
 
----
 
-Made with ❤️ for productive dictation on macOS.
 

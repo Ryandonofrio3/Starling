@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import AudioToolbox
 import Foundation
 import os
 
@@ -31,20 +32,40 @@ final class AudioCaptureController {
         case stopping
     }
 
+    enum CaptureError: Swift.Error {
+        case invalidAudioFormat
+    }
+
+    enum DeviceError: Swift.Error {
+        case deviceNotFound
+        case propertySetFailed(OSStatus)
+    }
+
+    private let configuration: AudioCaptureConfiguration
     private let engine = AVAudioEngine()
     private let targetFormat: AVAudioFormat
     private let logger = Logger(subsystem: "com.starling.app", category: "AudioCapture")
-    private let bufferSize: AVAudioFrameCount = 1024
     private let queue = DispatchQueue(label: "com.starling.audio-capture", qos: .userInitiated)
     private var converter: AVAudioConverter?
     private var inputFormat: AVAudioFormat?
+    private var pendingDeviceUID: String?
+    private var currentDeviceID: AudioDeviceID?
 
     weak var delegate: AudioCaptureControllerDelegate?
 
     private(set) var state: State = .idle
 
-    init(sampleRate: Double = 16_000) {
-        targetFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false)!
+    init(configuration: AudioCaptureConfiguration = .default) throws {
+        self.configuration = configuration
+        guard let format = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: configuration.sampleRate,
+            channels: configuration.channelCount,
+            interleaved: false
+        ) else {
+            throw CaptureError.invalidAudioFormat
+        }
+        targetFormat = format
     }
 
     func start() {
@@ -54,6 +75,12 @@ final class AudioCaptureController {
         }
 
         state = .starting
+
+        do {
+            try applyInputDeviceIfNeeded()
+        } catch {
+            logger.error("Failed to apply input device: \(String(describing: error), privacy: .public)")
+        }
 
         do {
             try configureSession()
@@ -75,8 +102,8 @@ final class AudioCaptureController {
         }
 
         let audioUnit = inputNode.auAudioUnit
-        if audioUnit.maximumFramesToRender < bufferSize {
-            audioUnit.maximumFramesToRender = bufferSize
+        if audioUnit.maximumFramesToRender < configuration.bufferSize {
+            audioUnit.maximumFramesToRender = configuration.bufferSize
         }
 
         installTap(on: inputNode)
@@ -107,8 +134,22 @@ final class AudioCaptureController {
         notifyStop()
     }
 
+    func setInputDevice(uid: String?) throws {
+        pendingDeviceUID = uid
+        if state == .idle {
+            do {
+                try applyInputDeviceIfNeeded()
+                logger.log("Microphone selection updated to \(uid ?? "System Default", privacy: .public)")
+            } catch {
+                logger.error("Failed to set microphone: \(String(describing: error), privacy: .public)")
+                throw error
+            }
+        } else {
+            logger.debug("Microphone change queued until capture returns to idle")
+        }
+    }
+
     private func configureSession() throws {
-        // Check permission right before using microphone hardware
         let status = AVCaptureDevice.authorizationStatus(for: .audio)
         guard status == .authorized else {
             logger.error("Microphone permission not granted (status: \(String(describing: status), privacy: .public))")
@@ -119,8 +160,8 @@ final class AudioCaptureController {
         #if !os(macOS)
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
-        try session.setPreferredSampleRate(targetFormat.sampleRate)
-        try session.setPreferredIOBufferDuration(Double(bufferSize) / targetFormat.sampleRate)
+        try session.setPreferredSampleRate(configuration.sampleRate)
+        try session.setPreferredIOBufferDuration(Double(configuration.bufferSize) / configuration.sampleRate)
         try session.setActive(true)
         #endif
     }
@@ -132,7 +173,7 @@ final class AudioCaptureController {
         }
 
         node.removeTap(onBus: 0)
-        node.installTap(onBus: 0, bufferSize: bufferSize, format: inputFormat) { [weak self] buffer, _ in
+        node.installTap(onBus: 0, bufferSize: configuration.bufferSize, format: inputFormat) { [weak self] buffer, _ in
             self?.handleCapturedBuffer(buffer)
         }
     }
@@ -183,6 +224,83 @@ final class AudioCaptureController {
             let chunk = AudioChunk(samples: samples, sampleRate: self.targetFormat.sampleRate)
             self.notifyChunk(chunk)
         }
+    }
+
+    private func applyInputDeviceIfNeeded() throws {
+        guard let audioUnit = engine.inputNode.audioUnit else {
+            throw DeviceError.propertySetFailed(-1)
+        }
+
+        if let uid = pendingDeviceUID {
+            let deviceID = try Self.deviceID(forUID: uid)
+            if currentDeviceID == deviceID { return }
+            var mutableID = deviceID
+            let status = AudioUnitSetProperty(
+                audioUnit,
+                kAudioOutputUnitProperty_CurrentDevice,
+                kAudioUnitScope_Global,
+                0,
+                &mutableID,
+                UInt32(MemoryLayout<AudioDeviceID>.size)
+            )
+            guard status == noErr else {
+                throw DeviceError.propertySetFailed(status)
+            }
+            currentDeviceID = deviceID
+        } else {
+            guard currentDeviceID != nil else { return }
+            var defaultDevice = AudioDeviceID(kAudioObjectUnknown)
+            let status = AudioUnitSetProperty(
+                audioUnit,
+                kAudioOutputUnitProperty_CurrentDevice,
+                kAudioUnitScope_Global,
+                0,
+                &defaultDevice,
+                UInt32(MemoryLayout<AudioDeviceID>.size)
+            )
+            guard status == noErr else {
+                throw DeviceError.propertySetFailed(status)
+            }
+            currentDeviceID = nil
+        }
+    }
+
+    private static func deviceID(forUID uid: String) throws -> AudioDeviceID {
+        var uidCF = uid as CFString
+        var deviceID = AudioDeviceID()
+
+        let status: OSStatus = withUnsafeMutablePointer(to: &uidCF) { uidPointer in
+            withUnsafeMutablePointer(to: &deviceID) { devicePointer in
+                var translation = AudioValueTranslation(
+                    mInputData: UnsafeMutableRawPointer(uidPointer),
+                    mInputDataSize: UInt32(MemoryLayout<CFString>.size),
+                    mOutputData: UnsafeMutableRawPointer(devicePointer),
+                    mOutputDataSize: UInt32(MemoryLayout<AudioDeviceID>.size)
+                )
+
+                var propertyAddress = AudioObjectPropertyAddress(
+                    mSelector: kAudioHardwarePropertyDeviceForUID,
+                    mScope: kAudioObjectPropertyScopeGlobal,
+                    mElement: kAudioObjectPropertyElementMain
+                )
+
+                var size = UInt32(MemoryLayout<AudioValueTranslation>.size)
+                return AudioObjectGetPropertyData(
+                    AudioObjectID(kAudioObjectSystemObject),
+                    &propertyAddress,
+                    0,
+                    nil,
+                    &size,
+                    &translation
+                )
+            }
+        }
+
+        guard status == noErr else {
+            throw DeviceError.deviceNotFound
+        }
+
+        return deviceID
     }
 
     private func notifyStart() {
