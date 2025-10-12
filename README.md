@@ -29,7 +29,7 @@ Starling is a lightweight macOS menu bar app that lets you dictate text anywhere
 #### Option 1: Homebrew (Recommended)
 
 ```bash
-brew tap <Ryandonofrio3>/starling
+brew tap Ryandonofrio3/starling
 brew install starling
 ```
 

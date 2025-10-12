@@ -1,11 +1,11 @@
 cask "starling" do
   version "0.1.0-alpha"
-  sha256 "5f20c379c5a9d61dfaeef042fdb6509502b0e32a84ce6027f1e26c247bb34c52"
+  sha256 "0aa7e2ef1a5ef2a214f347522c74a0e46dacb15bcff986da1afdb38e1593c0be"
 
-  url "https://github.com/YourUsername/starling/releases/download/v#{version}/Starling-v#{version}.zip"
+  url "https://github.com/Ryandonofrio3/Starling/releases/download/v#{version}/Starling-v#{version}.zip"
   name "Starling"
   desc "Local voice-to-text transcription with auto-paste"
-  homepage "https://github.com/YourUsername/starling"
+  homepage "https://github.com/Ryandonofrio3/Starling"
 
   livecheck do
     url :url
