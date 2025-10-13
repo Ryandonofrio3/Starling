@@ -224,13 +224,17 @@ final class RecordingCoordinator: NSObject {
             return false
         }
 
-        let baseline = FocusSnapshot.capture()
+        var baseline = FocusSnapshot.capture()
+        if baseline == nil {
+            logger.log("Cached transcript paste missing focus snapshot; forcing auto-paste without baseline")
+        }
         _ = pasteController.paste(
             text: transcript,
             focusSnapshot: baseline,
             preserveClipboard: preserveClipboard,
             forcePlainTextOnly: preferences.forcePlainTextOnly,
-            autoClearDelay: preferences.clipboardAutoClear.timeInterval
+            autoClearDelay: preferences.clipboardAutoClear.timeInterval,
+            forcePasteWithoutBaseline: true
         )
         logger.log("Pasted cached transcript (length=\(transcript.count, privacy: .public))")
         return true
@@ -373,12 +377,23 @@ private extension RecordingCoordinator {
 
         var pasteOutcome: PasteController.Outcome = .skipped
         if hasContent {
+            var focusSnapshotForPaste = lastFocusSnapshot
+            if focusSnapshotForPaste == nil {
+                focusSnapshotForPaste = FocusSnapshot.capture()
+                if let snapshot = focusSnapshotForPaste {
+                    logger.log("Captured focus snapshot just-in-time for auto-paste")
+                } else {
+                    logger.log("Focus snapshot unavailable at paste time; forcing auto-paste without baseline")
+                }
+            }
+
             pasteOutcome = pasteController.paste(
                 text: normalizedText,
-                focusSnapshot: lastFocusSnapshot,
+                focusSnapshot: focusSnapshotForPaste,
                 preserveClipboard: preferences.keepTranscriptOnClipboard,
                 forcePlainTextOnly: preferences.forcePlainTextOnly,
-                autoClearDelay: preferences.clipboardAutoClear.timeInterval
+                autoClearDelay: preferences.clipboardAutoClear.timeInterval,
+                forcePasteWithoutBaseline: true
             )
             lastTranscript = normalizedText
             if let ms = totalElapsed {

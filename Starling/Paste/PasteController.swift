@@ -19,7 +19,14 @@ final class PasteController {
         case copiedFallback
         case skipped
     }
-    func paste(text: String, focusSnapshot: FocusSnapshot?, preserveClipboard: Bool, forcePlainTextOnly: Bool, autoClearDelay: TimeInterval?) -> Outcome {
+    func paste(
+        text: String,
+        focusSnapshot: FocusSnapshot?,
+        preserveClipboard: Bool,
+        forcePlainTextOnly: Bool,
+        autoClearDelay: TimeInterval?,
+        forcePasteWithoutBaseline: Bool = false
+    ) -> Outcome {
         let hasContent = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         guard hasContent else {
             logger.debug("Paste skipped because text was empty")
@@ -31,13 +38,23 @@ final class PasteController {
 
         let currentFocus = FocusSnapshot.capture()
 
-        let focusChangeReason: FocusSnapshot.ChangeReason? = {
+        var focusChangeReason: FocusSnapshot.ChangeReason? = {
             if let snapshot = focusSnapshot {
                 return snapshot.changeReason(comparedTo: currentFocus)
             } else {
                 return .missingBaseline
             }
         }()
+
+        if forcePasteWithoutBaseline, let reason = focusChangeReason {
+            switch reason {
+            case .missingBaseline, .missingCurrent:
+                logger.log("Force paste enabled; ignoring \(reason.logDescription, privacy: .public)")
+                focusChangeReason = nil
+            default:
+                break
+            }
+        }
 
         let focusChanged = focusChangeReason != nil
         let secureInputActive = PasteController.isSecureInputActive()

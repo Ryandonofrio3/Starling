@@ -134,3 +134,5 @@ do-release.sh
 
 GOALS.md
 HOMEBREW.md
+blog/blog.md
+.gitignore
