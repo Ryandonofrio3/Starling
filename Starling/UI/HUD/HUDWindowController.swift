@@ -15,11 +15,13 @@ final class HUDWindowController: NSObject {
     private let hostingView: NSHostingView<HUDView>
     private var cancellables = Set<AnyCancellable>()
     private let appState: AppState
+    private let preferences: PreferencesStore
     private let defaults = UserDefaults.standard
     private static let frameDefaultsKey = "com.starling.hud.panelFrame"
 
-    init(appState: AppState) {
+    init(appState: AppState, preferences: PreferencesStore = .shared) {
         self.appState = appState
+        self.preferences = preferences
         let contentSize = NSSize(width: 320, height: 96)
         panel = NonActivatingPanel(contentRect: NSRect(origin: .zero, size: contentSize), styleMask: [.nonactivatingPanel, .hudWindow], backing: .buffered, defer: false)
         panel.level = .floating
@@ -34,7 +36,7 @@ final class HUDWindowController: NSObject {
         panel.titleVisibility = .hidden
         panel.isMovableByWindowBackground = true
 
-        hostingView = NSHostingView(rootView: HUDView(phase: .idle))
+        hostingView = NSHostingView(rootView: HUDView(phase: .idle, hotkeyDisplayString: preferences.hotkeyConfig.displayString, recordingMode: preferences.recordingMode))
         hostingView.frame = NSRect(origin: .zero, size: contentSize)
         panel.contentView = hostingView
 
@@ -53,10 +55,26 @@ final class HUDWindowController: NSObject {
                 self?.update(for: phase)
             }
             .store(in: &cancellables)
+        
+        preferences.$hotkeyConfig
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.hostingView.rootView = HUDView(phase: self.appState.phase, hotkeyDisplayString: self.preferences.hotkeyConfig.displayString, recordingMode: self.preferences.recordingMode)
+            }
+            .store(in: &cancellables)
+        
+        preferences.$recordingMode
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.hostingView.rootView = HUDView(phase: self.appState.phase, hotkeyDisplayString: self.preferences.hotkeyConfig.displayString, recordingMode: self.preferences.recordingMode)
+            }
+            .store(in: &cancellables)
     }
 
     private func update(for phase: AppState.Phase) {
-        hostingView.rootView = HUDView(phase: phase)
+        hostingView.rootView = HUDView(phase: phase, hotkeyDisplayString: preferences.hotkeyConfig.displayString, recordingMode: preferences.recordingMode)
 
         switch phase {
         case .idle:
@@ -161,10 +179,12 @@ private final class NonActivatingPanel: NSPanel {
 
 private struct HUDView: View {
     let phase: AppState.Phase
+    let hotkeyDisplayString: String
+    let recordingMode: PreferencesStore.RecordingMode
     @State private var glow = false
 
     var body: some View {
-        let presentation = HUDPresentation(phase: phase)
+        let presentation = HUDPresentation(phase: phase, hotkeyDisplayString: hotkeyDisplayString, recordingMode: recordingMode)
 
         ZStack {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -203,7 +223,7 @@ private struct HUDView: View {
             glow = presentation.animateGlow
         }
         .onChange(of: phase) { _, newPhase in
-            let newPresentation = HUDPresentation(phase: newPhase)
+            let newPresentation = HUDPresentation(phase: newPhase, hotkeyDisplayString: hotkeyDisplayString, recordingMode: recordingMode)
             if newPresentation.animateGlow {
                 glow = true
             } else {
@@ -219,7 +239,7 @@ private struct HUDPresentation {
     let iconName: String?
     let animateGlow: Bool
 
-    init(phase: AppState.Phase) {
+    init(phase: AppState.Phase, hotkeyDisplayString: String, recordingMode: PreferencesStore.RecordingMode) {
         switch phase {
         case .idle:
             title = ""
@@ -237,7 +257,12 @@ private struct HUDPresentation {
             animateGlow = false
         case .listening:
             title = "Listening…"
-            detail = "Press ⌃⌥⌘J to stop"
+            switch recordingMode {
+            case .toggle:
+                detail = "Press \(hotkeyDisplayString) to stop"
+            case .holdToTalk:
+                detail = "Release to stop"
+            }
             iconName = "BirdListening"
             animateGlow = true
         case .transcribing:
