@@ -23,10 +23,13 @@ struct HotkeyConfig: Codable, Equatable {
         if modifiers & UInt32(optionKey) != 0 { parts.append("⌥") }
         if modifiers & UInt32(shiftKey) != 0 { parts.append("⇧") }
         if modifiers & UInt32(cmdKey) != 0 { parts.append("⌘") }
+        
+        let modifierString = parts.joined()
         if let key = Self.keyCodeToString(keyCode) {
-            parts.append(key)
+            // Add space before the key if there are modifiers, for better readability
+            return modifierString.isEmpty ? key : modifierString + key
         }
-        return parts.joined()
+        return modifierString
     }
     
     private static func keyCodeToString(_ code: UInt32) -> String? {
@@ -67,6 +70,17 @@ struct HotkeyConfig: Codable, Equatable {
         case kVK_ANSI_7: return "7"
         case kVK_ANSI_8: return "8"
         case kVK_ANSI_9: return "9"
+        case kVK_ANSI_Minus: return "-"
+        case kVK_ANSI_Equal: return "="
+        case kVK_ANSI_LeftBracket: return "["
+        case kVK_ANSI_RightBracket: return "]"
+        case kVK_ANSI_Quote: return "'"
+        case kVK_ANSI_Semicolon: return ";"
+        case kVK_ANSI_Backslash: return "\\"
+        case kVK_ANSI_Comma: return ","
+        case kVK_ANSI_Slash: return "/"
+        case kVK_ANSI_Period: return "."
+        case kVK_ANSI_Grave: return "`"
         case kVK_Space: return "Space"
         case kVK_Return: return "↩"
         case kVK_Tab: return "⇥"
