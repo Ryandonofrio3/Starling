@@ -71,6 +71,14 @@ final class HUDWindowController: NSObject {
                 self.hostingView.rootView = HUDView(phase: self.appState.phase, hotkeyDisplayString: self.preferences.hotkeyConfig.displayString, recordingMode: self.preferences.recordingMode)
             }
             .store(in: &cancellables)
+        
+        preferences.$minimalistMode
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.update(for: self.appState.phase)
+            }
+            .store(in: &cancellables)
     }
 
     private func update(for phase: AppState.Phase) {
@@ -80,11 +88,15 @@ final class HUDWindowController: NSObject {
         case .idle:
             panel.orderOut(nil)
         default:
-            if panel.isVisible == false {
-                applyInitialFrame()
-                panel.orderFrontRegardless()
+            if preferences.minimalistMode {
+                panel.orderOut(nil)
             } else {
-                ensurePanelWithinVisibleSpace()
+                if panel.isVisible == false {
+                    applyInitialFrame()
+                    panel.orderFrontRegardless()
+                } else {
+                    ensurePanelWithinVisibleSpace()
+                }
             }
         }
     }

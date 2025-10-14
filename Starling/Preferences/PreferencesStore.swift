@@ -115,6 +115,10 @@ final class PreferencesStore: ObservableObject {
         didSet { defaults.set(selectedMicrophoneID, forKey: Keys.selectedMicrophoneID) }
     }
 
+    @Published var minimalistMode: Bool {
+        didSet { defaults.set(minimalistMode, forKey: Keys.minimalistMode) }
+    }
+
     private let defaults: UserDefaults
 
     private init(defaults: UserDefaults = .standard) {
@@ -127,7 +131,8 @@ final class PreferencesStore: ObservableObject {
             Keys.textCleanupOptions: defaultCleanupData,
             Keys.forcePlainTextOnly: true,
             Keys.clipboardAutoClear: ClipboardAutoClear.off.rawValue,
-            Keys.hasCompletedOnboarding: false
+            Keys.hasCompletedOnboarding: false,
+            Keys.minimalistMode: false
         ])
 
         // Initialize properties without triggering didSet
@@ -140,6 +145,7 @@ final class PreferencesStore: ObservableObject {
         let loadedForcePlain: Bool
         let loadedAutoClear: ClipboardAutoClear
         let loadedMicrophoneID: String?
+        let loadedMinimalistMode: Bool
 
         if let data = defaults.data(forKey: Keys.hotkeyConfig),
            let decoded = try? JSONDecoder().decode(HotkeyConfig.self, from: data) {
@@ -175,6 +181,7 @@ final class PreferencesStore: ObservableObject {
         }
 
         loadedMicrophoneID = defaults.string(forKey: Keys.selectedMicrophoneID)
+        loadedMinimalistMode = defaults.bool(forKey: Keys.minimalistMode)
 
         keepTranscriptOnClipboard = loadedClipboard
         trailingSilenceDuration = loadedSilence == 0 ? 0.85 : loadedSilence
@@ -185,6 +192,7 @@ final class PreferencesStore: ObservableObject {
         forcePlainTextOnly = loadedForcePlain
         clipboardAutoClear = loadedAutoClear
         selectedMicrophoneID = loadedMicrophoneID
+        minimalistMode = loadedMinimalistMode
     }
 
     private enum Keys {
@@ -197,5 +205,6 @@ final class PreferencesStore: ObservableObject {
         static let forcePlainTextOnly = "preferences.forcePlainTextOnly"
         static let clipboardAutoClear = "preferences.clipboardAutoClear"
         static let selectedMicrophoneID = "preferences.selectedMicrophoneID"
+        static let minimalistMode = "preferences.minimalistMode"
     }
 }

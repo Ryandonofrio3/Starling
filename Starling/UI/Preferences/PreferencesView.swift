@@ -99,6 +99,16 @@ struct PreferencesView: View {
                 Divider()
                     .padding(.vertical, 4)
 
+                Text("Display")
+                    .font(.headline)
+
+                Toggle("Minimalist mode", isOn: $preferences.minimalistMode)
+                    .toggleStyle(.switch)
+                    .help("Hides the HUD window. Only the menu bar icon will indicate recording state.")
+
+                Divider()
+                    .padding(.vertical, 4)
+
                 Text("Text Cleanup")
                     .font(.headline)
 
