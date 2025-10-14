@@ -124,11 +124,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
 private extension AppDelegate {
     func preferencesPublisherBindings() {
-        preferences.$trailingSilenceDuration
+        preferences.$trailingSilencePreference
             .removeDuplicates()
             .receive(on: RunLoop.main)
-            .sink { [weak self] value in
-                self?.recordingCoordinator.updateTrailingSilenceDuration(value)
+            .sink { [weak self] preference in
+                self?.recordingCoordinator.updateTrailingSilencePreference(preference)
             }
             .store(in: &cancellables)
 

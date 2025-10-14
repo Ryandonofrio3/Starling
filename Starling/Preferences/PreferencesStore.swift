@@ -69,12 +69,111 @@ final class PreferencesStore: ObservableObject {
         }
     }
 
+    enum TrailingSilencePreference: Codable, Equatable {
+        case automatic(Double)
+        case manual
+
+        private enum CodingKeys: String, CodingKey { case mode, seconds }
+        private enum Mode: String, Codable { case automatic, manual }
+
+        static let minimumSeconds: Double = 0.3
+        static let maximumAutomaticSeconds: Double = 2.0
+        static let manualSliderValue: Double = 2.5
+        static let sliderStep: Double = 0.05
+        static let manualSelectionThreshold: Double = manualSliderValue - sliderStep / 2
+        static let defaultAutomaticSeconds: Double = 0.85
+
+        var duration: Double? {
+            switch self {
+            case let .automatic(seconds):
+                return seconds
+            case .manual:
+                return nil
+            }
+        }
+
+        var effectiveDuration: Double {
+            switch self {
+            case let .automatic(seconds):
+                return seconds
+            case .manual:
+                return Self.maximumAutomaticSeconds
+            }
+        }
+
+        var requiresManualStop: Bool {
+            duration == nil
+        }
+
+        var sliderValue: Double {
+            switch self {
+            case let .automatic(seconds):
+                return seconds
+            case .manual:
+                return Self.manualSliderValue
+            }
+        }
+
+        var displayString: String {
+            switch self {
+            case let .automatic(seconds):
+                return String(format: "%.2f s", seconds)
+            case .manual:
+                return "Manual (Press Esc)"
+            }
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            switch self {
+            case let .automatic(seconds):
+                try container.encode(Mode.automatic, forKey: .mode)
+                try container.encode(seconds, forKey: .seconds)
+            case .manual:
+                try container.encode(Mode.manual, forKey: .mode)
+            }
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let mode = try container.decode(Mode.self, forKey: .mode)
+            switch mode {
+            case .automatic:
+                let seconds = try container.decode(Double.self, forKey: .seconds)
+                self = .automatic(Self.clamp(seconds))
+            case .manual:
+                self = .manual
+            }
+        }
+
+        static func preference(fromSliderValue value: Double) -> TrailingSilencePreference {
+            if value >= manualSelectionThreshold {
+                return .manual
+            }
+            return .automatic(clamp(value))
+        }
+
+        static func fromLegacySeconds(_ seconds: Double) -> TrailingSilencePreference {
+            guard seconds > 0 else { return .automatic(defaultAutomaticSeconds) }
+            return .automatic(clamp(seconds))
+        }
+
+        private static func clamp(_ seconds: Double) -> Double {
+            min(max(seconds, minimumSeconds), maximumAutomaticSeconds)
+        }
+    }
+
     @Published var keepTranscriptOnClipboard: Bool {
         didSet { defaults.set(keepTranscriptOnClipboard, forKey: Keys.keepTranscriptOnClipboard) }
     }
 
-    @Published var trailingSilenceDuration: Double {
-        didSet { defaults.set(trailingSilenceDuration, forKey: Keys.trailingSilenceDuration) }
+    @Published var trailingSilencePreference: TrailingSilencePreference {
+        didSet {
+            if let encoded = try? JSONEncoder().encode(trailingSilencePreference) {
+                defaults.set(encoded, forKey: Keys.trailingSilencePreference)
+            }
+            defaults.removeObject(forKey: Keys.trailingSilenceDurationLegacy)
+        }
     }
 
     @Published var recordingMode: RecordingMode {
@@ -120,19 +219,21 @@ final class PreferencesStore: ObservableObject {
     private init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let defaultCleanupData = (try? JSONEncoder().encode(TextCleanupOptions.default)) ?? Data()
-        defaults.register(defaults: [
+        var defaultValues: [String: Any] = [
             Keys.keepTranscriptOnClipboard: false,
-            Keys.trailingSilenceDuration: 0.85,
             Keys.recordingMode: RecordingMode.toggle.rawValue,
             Keys.textCleanupOptions: defaultCleanupData,
             Keys.forcePlainTextOnly: true,
             Keys.clipboardAutoClear: ClipboardAutoClear.off.rawValue,
             Keys.hasCompletedOnboarding: false
-        ])
+        ]
+        if let encodedSilence = try? JSONEncoder().encode(TrailingSilencePreference.automatic(TrailingSilencePreference.defaultAutomaticSeconds)) {
+            defaultValues[Keys.trailingSilencePreference] = encodedSilence
+        }
+        defaults.register(defaults: defaultValues)
 
         // Initialize properties without triggering didSet
         let loadedClipboard = defaults.bool(forKey: Keys.keepTranscriptOnClipboard)
-        let loadedSilence = defaults.double(forKey: Keys.trailingSilenceDuration)
         let loadedOnboarding = defaults.bool(forKey: Keys.hasCompletedOnboarding)
         let loadedHotkey: HotkeyConfig
         let loadedMode: RecordingMode
@@ -140,6 +241,7 @@ final class PreferencesStore: ObservableObject {
         let loadedForcePlain: Bool
         let loadedAutoClear: ClipboardAutoClear
         let loadedMicrophoneID: String?
+        let loadedSilencePreference: TrailingSilencePreference
 
         if let data = defaults.data(forKey: Keys.hotkeyConfig),
            let decoded = try? JSONDecoder().decode(HotkeyConfig.self, from: data) {
@@ -176,8 +278,18 @@ final class PreferencesStore: ObservableObject {
 
         loadedMicrophoneID = defaults.string(forKey: Keys.selectedMicrophoneID)
 
+        if let data = defaults.data(forKey: Keys.trailingSilencePreference),
+           let decoded = try? JSONDecoder().decode(TrailingSilencePreference.self, from: data) {
+            loadedSilencePreference = decoded
+        } else if defaults.object(forKey: Keys.trailingSilenceDurationLegacy) != nil {
+            let legacyValue = defaults.double(forKey: Keys.trailingSilenceDurationLegacy)
+            loadedSilencePreference = TrailingSilencePreference.fromLegacySeconds(legacyValue)
+        } else {
+            loadedSilencePreference = .automatic(TrailingSilencePreference.defaultAutomaticSeconds)
+        }
+
         keepTranscriptOnClipboard = loadedClipboard
-        trailingSilenceDuration = loadedSilence == 0 ? 0.85 : loadedSilence
+        trailingSilencePreference = loadedSilencePreference
         recordingMode = loadedMode
         textCleanupOptions = loadedCleanup
         hotkeyConfig = loadedHotkey
@@ -189,7 +301,8 @@ final class PreferencesStore: ObservableObject {
 
     private enum Keys {
         static let keepTranscriptOnClipboard = "preferences.keepTranscriptOnClipboard"
-        static let trailingSilenceDuration = "preferences.trailingSilenceDuration"
+        static let trailingSilencePreference = "preferences.trailingSilencePreference"
+        static let trailingSilenceDurationLegacy = "preferences.trailingSilenceDuration"
         static let recordingMode = "preferences.recordingMode"
         static let textCleanupOptions = "preferences.textCleanupOptions"
         static let hotkeyConfig = "preferences.hotkeyConfig"

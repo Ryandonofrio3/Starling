@@ -47,6 +47,7 @@ final class RecordingCoordinator: NSObject {
     private let textNormalizer = TextNormalizer()
 
     private var vad: VoiceActivityDetector
+    private var autoStopOnSilence = true
     private var capturedSamples: [Float] = []
     private var isStoppingRecording = false
     private var warmupTask: Task<Void, Never>?
@@ -91,9 +92,11 @@ final class RecordingCoordinator: NSObject {
         self.transcriptionService = transcriptionService
         self.pasteController = pasteController
         audioController = try AudioCaptureController(configuration: audioConfiguration)
+        let initialSilencePreference = preferences.trailingSilencePreference
+        autoStopOnSilence = !initialSilencePreference.requiresManualStop
         vad = RecordingCoordinator.makeDetector(
             sampleRate: audioConfiguration.sampleRate,
-            trailingSilence: preferences.trailingSilenceDuration
+            trailingSilence: initialSilencePreference.effectiveDuration
         )
         super.init()
         audioController.delegate = self
@@ -145,12 +148,17 @@ final class RecordingCoordinator: NSObject {
         }
     }
 
-    func updateTrailingSilenceDuration(_ value: Double) {
+    func updateTrailingSilencePreference(_ preference: PreferencesStore.TrailingSilencePreference) {
+        autoStopOnSilence = !preference.requiresManualStop
         vad = RecordingCoordinator.makeDetector(
             sampleRate: audioConfiguration.sampleRate,
-            trailingSilence: value
+            trailingSilence: preference.effectiveDuration
         )
-        logger.log("Updated VAD trailing silence to \(String(format: "%.2f", value), privacy: .public)s")
+        if let seconds = preference.duration {
+            logger.log("Updated VAD trailing silence to \(String(format: "%.2f", seconds), privacy: .public)s")
+        } else {
+            logger.log("Voice activity auto-stop disabled; manual stop required")
+        }
     }
 
     func startListening() {
@@ -276,7 +284,7 @@ extension RecordingCoordinator: AudioCaptureControllerDelegate {
         }
 
         // Only auto-stop on silence detection if NOT in hold-to-talk mode
-        if result.didEndSpeech && preferences.recordingMode != .holdToTalk {
+        if autoStopOnSilence && result.didEndSpeech && preferences.recordingMode != .holdToTalk {
             logger.log("Voice activity ended; auto-stopping")
             stopListening(reason: .voiceActivity)
         }
