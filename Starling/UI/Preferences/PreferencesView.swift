@@ -85,13 +85,32 @@ struct PreferencesView: View {
                         .font(.subheadline)
 
                     HStack {
-                        Slider(value: $preferences.trailingSilenceDuration, in: 0.3...1.5, step: 0.05)
-                        Text("\(preferences.trailingSilenceDuration, format: .number.precision(.fractionLength(2))) s")
-                            .monospacedDigit()
-                            .frame(width: 60, alignment: .trailing)
+                        Slider(
+                            value: Binding(
+                                get: { preferences.trailingSilencePreference.sliderValue },
+                                set: { newValue in
+                                    preferences.trailingSilencePreference = PreferencesStore.TrailingSilencePreference.preference(fromSliderValue: newValue)
+                                }
+                            ),
+                            in: PreferencesStore.TrailingSilencePreference.minimumSeconds...PreferencesStore.TrailingSilencePreference.manualSliderValue,
+                            step: PreferencesStore.TrailingSilencePreference.sliderStep
+                        )
+
+                        Group {
+                            switch preferences.trailingSilencePreference {
+                            case let .automatic(seconds):
+                                Text("\(seconds, format: .number.precision(.fractionLength(2))) s")
+                                    .monospacedDigit()
+                            case .manual:
+                                Text("Manual (Press Esc to finish)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .frame(width: 180, alignment: .trailing)
                     }
-                    
-                    Text("How long Starling waits after silence before auto-stopping. Longer values are kinder to dramatic pauses.")
+
+                    Text("How long Starling waits after silence before auto-stopping. Manual requires finishing with your stop shortcut (Toggle hotkey or Esc).")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
