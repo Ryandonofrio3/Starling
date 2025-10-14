@@ -275,7 +275,8 @@ extension RecordingCoordinator: AudioCaptureControllerDelegate {
             logger.log("Voice activity detected")
         }
 
-        if result.didEndSpeech {
+        // Only auto-stop on silence detection if NOT in hold-to-talk mode
+        if result.didEndSpeech && preferences.recordingMode != .holdToTalk {
             logger.log("Voice activity ended; auto-stopping")
             stopListening(reason: .voiceActivity)
         }
