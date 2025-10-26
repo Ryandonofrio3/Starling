@@ -125,6 +125,8 @@ TEST-*.md
 STEPS.md
 TODO.md
 
+blog/
+
 # Release automation (personal workflow)
 RELEASE-PROCESS.md
 do-release.sh

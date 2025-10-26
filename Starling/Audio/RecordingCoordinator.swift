@@ -17,24 +17,6 @@ final class RecordingCoordinator: NSObject {
         case error
     }
 
-    struct RunMetrics {
-        enum StartType {
-            case warm
-            case cold
-        }
-
-        enum Result {
-            case pasted
-            case copiedFallback
-            case noSpeech
-            case failed
-        }
-
-        let latencyMs: Int?
-        let startType: StartType
-        let result: Result
-    }
-
     private let appState: AppState
     private let preferences: PreferencesStore
     private let accessibilityPermission: AccessibilityPermissionMonitor
@@ -56,6 +38,9 @@ final class RecordingCoordinator: NSObject {
     private var vadStopTime: CFAbsoluteTime?
     private var transcribeStartTime: CFAbsoluteTime?
     private var serviceReady = false
+    private var audioLevelHistory: [Float] = []
+    private let audioLevelWindowSize = 5
+    private var listeningStartTime: Date?
     private(set) var lastTranscript: String? {
         didSet {
             if oldValue != lastTranscript {
@@ -65,12 +50,10 @@ final class RecordingCoordinator: NSObject {
     }
 
     var lastTranscriptDidChange: ((String?) -> Void)?
-    var runMetricsDidChange: ((RunMetrics) -> Void)?
 
     private static let focusRetryBaseDelay: TimeInterval = 0.08
     private static let focusRetryMaxAttempts = 3
     private static let toastDelay: TimeInterval = 0.8
-    private var pendingStartWasWarm = false
 
     init(
         appState: AppState,
@@ -93,7 +76,7 @@ final class RecordingCoordinator: NSObject {
         audioController = try AudioCaptureController(configuration: audioConfiguration)
         vad = RecordingCoordinator.makeDetector(
             sampleRate: audioConfiguration.sampleRate,
-            trailingSilence: preferences.trailingSilenceDuration
+            trailingSilence: preferences.trailingSilenceConfig.duration
         )
         super.init()
         audioController.delegate = self
@@ -145,12 +128,16 @@ final class RecordingCoordinator: NSObject {
         }
     }
 
-    func updateTrailingSilenceDuration(_ value: Double) {
+    func updateTrailingSilenceConfig(_ config: PreferencesStore.TrailingSilenceConfig) {
         vad = RecordingCoordinator.makeDetector(
             sampleRate: audioConfiguration.sampleRate,
-            trailingSilence: value
+            trailingSilence: config.duration
         )
-        logger.log("Updated VAD trailing silence to \(String(format: "%.2f", value), privacy: .public)s")
+        if config.mode == .manual {
+            logger.log("Updated VAD to manual mode (auto-stop disabled)")
+        } else {
+            logger.log("Updated VAD to automatic mode with \(String(format: "%.2f", config.duration), privacy: .public)s trailing silence")
+        }
     }
 
     func startListening() {
@@ -161,6 +148,10 @@ final class RecordingCoordinator: NSObject {
         toastPresenter.cancel()
         capturedSamples.removeAll(keepingCapacity: true)
         vad.reset()
+        listeningStartTime = Date()
+        audioLevelHistory.removeAll(keepingCapacity: true)
+        appState.resetAudioLevel()
+        appState.setAudioWarning(nil)
         prepareFocusSnapshotBaseline()
         audioController.start()
         appState.beginListening()
@@ -171,6 +162,9 @@ final class RecordingCoordinator: NSObject {
         guard appState.phase == .listening, !isStoppingRecording else { return }
         toastPresenter.cancel()
         isStoppingRecording = true
+        listeningStartTime = nil
+        appState.setAudioWarning(nil)
+        appState.resetAudioLevel()
         vadStopTime = CFAbsoluteTimeGetCurrent()
         audioController.stop()
         appState.beginTranscribing()
@@ -192,6 +186,10 @@ final class RecordingCoordinator: NSObject {
         isStoppingRecording = false
         lastFocusSnapshot = nil
         cancelFocusSnapshotRetry()
+        listeningStartTime = nil
+        audioLevelHistory.removeAll(keepingCapacity: true)
+        appState.resetAudioLevel()
+        appState.setAudioWarning(nil)
         appState.resetToIdle()
         logger.debug("Returning to idle phase")
     }
@@ -224,7 +222,7 @@ final class RecordingCoordinator: NSObject {
             return false
         }
 
-        var baseline = FocusSnapshot.capture()
+        let baseline = FocusSnapshot.capture()
         if baseline == nil {
             logger.log("Cached transcript paste missing focus snapshot; forcing auto-paste without baseline")
         }
@@ -275,8 +273,21 @@ extension RecordingCoordinator: AudioCaptureControllerDelegate {
             logger.log("Voice activity detected")
         }
 
-        // Only auto-stop on silence detection if NOT in hold-to-talk mode
-        if result.didEndSpeech && preferences.recordingMode != .holdToTalk {
+        if appState.phase == .listening {
+            updateAudioLevel(with: result.rms)
+
+            if result.isSpeech {
+                listeningStartTime = nil
+                appState.setAudioWarning(nil)
+            } else if let start = listeningStartTime, Date().timeIntervalSince(start) >= 2 {
+                appState.setAudioWarning("No audio detected")
+            }
+        }
+
+        // Only auto-stop on silence detection if NOT in hold-to-talk mode AND automatic mode is enabled
+        if result.didEndSpeech && 
+           preferences.recordingMode != .holdToTalk && 
+           preferences.trailingSilenceConfig.mode == .automatic {
             logger.log("Voice activity ended; auto-stopping")
             stopListening(reason: .voiceActivity)
         }
@@ -296,6 +307,10 @@ extension RecordingCoordinator: AudioCaptureControllerDelegate {
         transcriptionTask = nil
         lastFocusSnapshot = nil
         cancelFocusSnapshotRetry()
+        listeningStartTime = nil
+        audioLevelHistory.removeAll(keepingCapacity: true)
+        appState.resetAudioLevel()
+        appState.setAudioWarning(nil)
         appState.resetToIdle()
         toastPresenter.show(message: "Microphone error.", delay: Self.toastDelay)
     }
@@ -304,6 +319,23 @@ extension RecordingCoordinator: AudioCaptureControllerDelegate {
 // MARK: - Private helpers
 
 private extension RecordingCoordinator {
+    func updateAudioLevel(with rms: Float) {
+        let normalized = normalizedAudioLevel(from: rms)
+        audioLevelHistory.append(normalized)
+        if audioLevelHistory.count > audioLevelWindowSize {
+            audioLevelHistory.removeFirst(audioLevelHistory.count - audioLevelWindowSize)
+        }
+        let sum = audioLevelHistory.reduce(0, +)
+        let average = audioLevelHistory.isEmpty ? 0 : sum / Float(audioLevelHistory.count)
+        appState.updateAudioLevel(average)
+    }
+
+    func normalizedAudioLevel(from rms: Float) -> Float {
+        let referenceLevel: Float = 0.05
+        let normalized = min(max(rms / referenceLevel, 0), 1)
+        return normalized
+    }
+
     static func makeDetector(sampleRate: Double, trailingSilence: Double) -> VoiceActivityDetector {
         VoiceActivityDetector(
             sampleRate: sampleRate,
@@ -327,11 +359,25 @@ private extension RecordingCoordinator {
 
     func transcribe(samples: [Float]) {
         transcriptionTask?.cancel()
+        transcriptionTask = nil
+        let duration = Double(samples.count) / audioConfiguration.sampleRate
+        if duration < 0.5 {
+            logger.log("Skipping transcription; recording too short (\(String(format: "%.3f", duration), privacy: .public)s)")
+            toastPresenter.show(message: "Recording too short", delay: Self.toastDelay)
+            vadStopTime = nil
+            transcribeStartTime = nil
+            lastFocusSnapshot = nil
+            cancelFocusSnapshotRetry()
+            audioLevelHistory.removeAll(keepingCapacity: true)
+            appState.resetAudioLevel()
+            appState.setAudioWarning(nil)
+            appState.resetToIdle()
+            return
+        }
+
         transcriptionTask = Task { [weak self] in
             guard let self else { return }
             await MainActor.run {
-                let warm = self.serviceReady
-                self.pendingStartWasWarm = warm
                 let elapsed = self.vadStopTime.map { CFAbsoluteTimeGetCurrent() - $0 }
                 if let ms = elapsed {
                     self.logger.log("⏱️ Transcription starting (+\(Int(ms * 1000), privacy: .public)ms from VAD stop)")
@@ -340,9 +386,8 @@ private extension RecordingCoordinator {
             }
             do {
                 let text = try await self.transcriptionService.transcribe(samples: samples, sampleRate: self.audioConfiguration.sampleRate)
-                let warmStart = await MainActor.run { self.pendingStartWasWarm }
                 await MainActor.run {
-                    self.handleTranscriptionResult(text: text, wasWarmStart: warmStart)
+                    self.handleTranscriptionResult(text: text)
                     self.transcriptionTask = nil
                 }
             } catch is CancellationError {
@@ -351,16 +396,15 @@ private extension RecordingCoordinator {
                     self.transcriptionTask = nil
                 }
             } catch {
-                let warmStart = await MainActor.run { self.pendingStartWasWarm }
                 await MainActor.run {
-                    self.handleTranscriptionError(error, wasWarmStart: warmStart)
+                    self.handleTranscriptionError(error)
                     self.transcriptionTask = nil
                 }
             }
         }
     }
 
-    func handleTranscriptionResult(text: String, wasWarmStart: Bool) {
+    func handleTranscriptionResult(text: String) {
         serviceReady = true
 
         logger.debug("📝 Raw ASR: \"\(text, privacy: .public)\"")
@@ -405,35 +449,21 @@ private extension RecordingCoordinator {
         let message = hasContent ? "Transcription ready." : "No speech detected."
         toastPresenter.show(message: message, delay: Self.toastDelay)
 
-        if let handler = runMetricsDidChange {
-            let latencyMs = hasContent ? totalElapsed.map { Int($0 * 1000) } : nil
-            let startType: RunMetrics.StartType = wasWarmStart ? .warm : .cold
-            let result: RunMetrics.Result
-
-            if !hasContent {
-                result = .noSpeech
-            } else {
-                switch pasteOutcome {
-                case .copiedFallback:
-                    result = .copiedFallback
-                case .pasted:
-                    result = .pasted
-                case .skipped:
-                    result = .noSpeech
-                }
-            }
-
-            handler(RunMetrics(latencyMs: latencyMs, startType: startType, result: result))
+        if hasContent {
+            let wordCount = trimmedNormalized.split { $0.isWhitespace }.count
+            preferences.incrementSessionStats(wordCount: wordCount)
         }
 
-        pendingStartWasWarm = false
         vadStopTime = nil
         transcribeStartTime = nil
         lastFocusSnapshot = nil
         cancelFocusSnapshotRetry()
+        audioLevelHistory.removeAll(keepingCapacity: true)
+        appState.resetAudioLevel()
+        appState.setAudioWarning(nil)
     }
 
-    func handleTranscriptionError(_ error: Error, wasWarmStart: Bool) {
+    func handleTranscriptionError(_ error: Error) {
         logger.error("Transcription failed: \(error.localizedDescription, privacy: .public)")
         serviceReady = false
         appState.resetToIdle()
@@ -441,8 +471,9 @@ private extension RecordingCoordinator {
         cancelFocusSnapshotRetry()
         toastPresenter.show(message: "Transcription failed.", delay: Self.toastDelay)
         warmUpServiceIfNeeded(displayHUD: false)
-        pendingStartWasWarm = false
-        runMetricsDidChange?(RunMetrics(latencyMs: nil, startType: wasWarmStart ? .warm : .cold, result: .failed))
+        audioLevelHistory.removeAll(keepingCapacity: true)
+        appState.resetAudioLevel()
+        appState.setAudioWarning(nil)
     }
 
     func prepareFocusSnapshotBaseline() {

@@ -20,11 +20,8 @@ final class AppState: ObservableObject {
             switch self {
             case .idle:
                 return ""
-            case .initializing(let progress):
-                if let progress {
-                    return "Preparing model… \(Int(progress * 100))%"
-                }
-                return "Preparing model…"
+            case .initializing:
+                return "Please wait, downloading model…"
             case .listening:
                 return "Listening…"
             case .transcribing:
@@ -55,6 +52,8 @@ final class AppState: ObservableObject {
     }
 
     @Published private(set) var phase: Phase = .idle
+    @Published var currentAudioLevel: Float = 0.0
+    @Published var audioWarning: String?
 
     func beginInitialization(progress: Double? = nil) {
         phase = .initializing(progress: progress)
@@ -78,5 +77,17 @@ final class AppState: ObservableObject {
 
     func resetToIdle() {
         phase = .idle
+    }
+
+    func updateAudioLevel(_ level: Float) {
+        currentAudioLevel = max(0, level)
+    }
+
+    func resetAudioLevel() {
+        currentAudioLevel = 0
+    }
+
+    func setAudioWarning(_ warning: String?) {
+        audioWarning = warning
     }
 }

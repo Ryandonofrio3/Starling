@@ -114,9 +114,9 @@ struct WelcomePage: View {
             
             VStack(alignment: .leading, spacing: 12) {
                 FeatureRow(icon: "⌃⌥⌘J", text: "Press your hotkey to start recording")
-                FeatureRow(icon: "🎤", text: "Speak naturally—VAD detects when you stop")
-                FeatureRow(icon: "⚡️", text: "Transcription happens locally on your Mac")
-                FeatureRow(icon: "📝", text: "Text pastes automatically at your cursor")
+                FeatureRow(icon: "mic", text: "Speak naturally—stops when you pause", isSystemIcon: true)
+                FeatureRow(icon: "cpu", text: "Transcription happens locally on your Mac", isSystemIcon: true)
+                FeatureRow(icon: "text.cursor", text: "Text pastes automatically at your cursor", isSystemIcon: true)
             }
             .padding(.horizontal, 40)
             
@@ -227,9 +227,9 @@ struct AccessibilityPage: View {
                 Text("Starling needs Accessibility permissions to:")
                     .font(.body)
                 
-                FeatureRow(icon: "⌘V", text: "Simulate paste keystrokes")
-                FeatureRow(icon: "🎯", text: "Detect where your cursor is")
-                FeatureRow(icon: "🔒", text: "Respect secure input fields")
+                FeatureRow(icon: "command", text: "Simulate paste keystrokes", isSystemIcon: true)
+                FeatureRow(icon: "cursorarrow.rays", text: "Detect where your cursor is", isSystemIcon: true)
+                FeatureRow(icon: "lock.fill", text: "Respect secure input fields", isSystemIcon: true)
             }
             .padding(.horizontal, 40)
             
@@ -244,20 +244,19 @@ struct AccessibilityPage: View {
                 .background(Color.green.opacity(0.1))
                 .cornerRadius(8)
             } else {
-                Button("Open Accessibility Settings") {
-                    permission.requestAccess()
+                VStack(spacing: 12) {
+                    Button("Open Accessibility Settings") {
+                        permission.requestAccess()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Text("After granting access, Starling will auto-detect it.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
                 }
-                .buttonStyle(.borderedProminent)
-                
-                Text("After granting access, Starling will auto-detect it. Restart only if the status stays unchanged.")
-                    .font(.caption)
-                    .foregroundColor(.orange)
             }
-            
-            Button("Check Status") {
-                permission.refresh()
-            }
-            .buttonStyle(.bordered)
         }
         .padding(40)
         .onAppear {
@@ -281,17 +280,23 @@ struct ModelDownloadPage: View {
                 Text("On first use, Starling will download:")
                     .font(.body)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 12) {
                         Image(systemName: "cpu")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 20)
                         Text("Parakeet v3 Core ML model (~2.5 GB)")
                     }
-                    HStack {
+                    HStack(spacing: 12) {
                         Image(systemName: "lock.shield")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 20)
                         Text("Stored locally in ~/Library/Caches/")
                     }
-                    HStack {
+                    HStack(spacing: 12) {
                         Image(systemName: "bolt.fill")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 20)
                         Text("Uses Neural Engine for fast transcription")
                     }
                 }
@@ -343,8 +348,8 @@ struct ReadyPage: View {
                 
                 VStack(alignment: .leading, spacing: 12) {
                     FeatureRow(icon: "⌃⌥⌘J", text: "Default hotkey (customizable in Settings)")
-                    FeatureRow(icon: "🎙", text: "Press once to start, again to stop (or wait for silence)")
-                    FeatureRow(icon: "⚙️", text: "Access Settings from the menu bar bird icon")
+                    FeatureRow(icon: "waveform", text: "Press once to start, again to stop (or wait for silence)", isSystemIcon: true)
+                    FeatureRow(icon: "gearshape", text: "Access Settings from the menu bar bird icon", isSystemIcon: true)
                 }
             }
             .padding(.horizontal, 40)
@@ -363,12 +368,20 @@ struct ReadyPage: View {
 struct FeatureRow: View {
     let icon: String
     let text: String
+    var isSystemIcon: Bool = false
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Text(icon)
-                .font(.title3)
-                .frame(width: 30)
+            if isSystemIcon {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30)
+            } else {
+                Text(icon)
+                    .font(.title3)
+                    .frame(width: 30)
+            }
             Text(text)
                 .font(.body)
         }

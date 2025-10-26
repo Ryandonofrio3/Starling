@@ -21,7 +21,7 @@ private struct MicrophoneDevice {
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private let preferences = PreferencesStore.shared
     private let appState = AppState()
-    private lazy var statusBarController = StatusBarController(appState: appState) { [weak self] in
+    private lazy var statusBarController = StatusBarController(appState: appState, preferences: preferences) { [weak self] in
         self?.terminate()
     }
     private lazy var hudController = HUDWindowController(appState: appState)
@@ -39,9 +39,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             )
             coordinator.lastTranscriptDidChange = { [weak self] transcript in
                 self?.statusBarController.setLastTranscriptAvailable(transcript?.isEmpty == false)
-            }
-            coordinator.runMetricsDidChange = { [weak self] metrics in
-                self?.statusBarController.updateLastRunMetrics(metrics)
             }
             return coordinator
         } catch {
@@ -68,7 +65,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         _ = hudController
         _ = recordingCoordinator
         statusBarController.setLastTranscriptAvailable(recordingCoordinator.hasCachedTranscript)
-        statusBarController.updateLastRunMetrics(nil)
         recordingCoordinator.updateSelectedMicrophone(uid: preferences.selectedMicrophoneID)
         refreshMicrophoneMenu()
 
@@ -124,11 +120,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
 private extension AppDelegate {
     func preferencesPublisherBindings() {
-        preferences.$trailingSilenceDuration
+        preferences.$trailingSilenceConfig
             .removeDuplicates()
             .receive(on: RunLoop.main)
-            .sink { [weak self] value in
-                self?.recordingCoordinator.updateTrailingSilenceDuration(value)
+            .sink { [weak self] config in
+                self?.recordingCoordinator.updateTrailingSilenceConfig(config)
             }
             .store(in: &cancellables)
 
@@ -420,7 +416,8 @@ private extension AppDelegate {
         )
 
         if success {
-            toastPresenter.show(message: "Pasted last transcript.", delay: 0.15, duration: 1.6)
+            //do nothing 
+            // do not show a toast message
         } else {
             toastPresenter.show(message: "No transcript to paste yet.", delay: 0.15, duration: 1.6)
         }

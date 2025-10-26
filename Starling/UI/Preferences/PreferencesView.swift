@@ -21,132 +21,215 @@ struct PreferencesView: View {
                 Divider()
 
                 VStack(alignment: .leading, spacing: 16) {
-                Text("Hotkey")
-                    .font(.headline)
-                
-                HotkeyRecorderView(hotkeyConfig: $preferences.hotkeyConfig)
+                    HStack(spacing: 6) {
+                        Text("Hotkey")
+                            .font(.headline)
+                        InfoTooltip(message: "Set the shortcut used to start and stop Starling.")
+                    }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Activation Mode")
-                        .font(.subheadline)
+                    HotkeyRecorderView(hotkeyConfig: $preferences.hotkeyConfig)
 
-                    Picker("Activation Mode", selection: $preferences.recordingMode) {
-                        ForEach(PreferencesStore.RecordingMode.allCases, id: \.self) { mode in
-                            Text(mode.displayName).tag(mode)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 4) {
+                            Text("Activation Mode")
+                                .font(.subheadline)
+                            InfoTooltip(message: "Choose between a toggle press or hold-to-talk recording.")
                         }
-                    }
-                    .pickerStyle(.segmented)
 
-                    Text("Toggle starts and stops with a press. Hold to Talk records only while the hotkey is held.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                Text("Press the button and type your desired hotkey combination. Requires ⌘, ⌃, or ⌥.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Divider()
-                    .padding(.vertical, 4)
-                
-                Text("Clipboard")
-                    .font(.headline)
-                
-                Toggle("Keep transcript on clipboard after auto-paste", isOn: $preferences.keepTranscriptOnClipboard)
-                    .toggleStyle(.switch)
-                    .help("When disabled, the previous clipboard contents are restored after auto-paste. Copy fallback always keeps the transcript available.")
-
-                Toggle("Force plain text only", isOn: $preferences.forcePlainTextOnly)
-                    .toggleStyle(.switch)
-                    .help("When enabled, Starling writes only plain text to the clipboard and clears other formats.")
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Auto-clear clipboard")
-                        .font(.subheadline)
-
-                    Picker("Auto-clear clipboard", selection: $preferences.clipboardAutoClear) {
-                        ForEach(PreferencesStore.ClipboardAutoClear.allCases, id: \.self) { option in
-                            Text(option.displayName).tag(option)
+                        Picker("Activation Mode", selection: $preferences.recordingMode) {
+                            ForEach(PreferencesStore.RecordingMode.allCases, id: \.self) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
                         }
+                        .pickerStyle(.segmented)
+
+                        Text("Toggle starts and stops with a press. Hold to Talk records only while the hotkey is held.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    .pickerStyle(.segmented)
-                    .disabled(!preferences.keepTranscriptOnClipboard)
-                    .help("Automatically clears the clipboard after the selected delay when Starling leaves the transcript there.")
-                }
-                
-                Divider()
-                    .padding(.vertical, 4)
-                
-                Text("Voice Activity")
-                    .font(.headline)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Trailing Silence Duration")
-                        .font(.subheadline)
 
-                    HStack {
-                        Slider(value: $preferences.trailingSilenceDuration, in: 0.3...1.5, step: 0.05)
-                        Text("\(preferences.trailingSilenceDuration, format: .number.precision(.fractionLength(2))) s")
-                            .monospacedDigit()
-                            .frame(width: 60, alignment: .trailing)
-                    }
-                    
-                    Text("How long Starling waits after silence before auto-stopping. Longer values are kinder to dramatic pauses.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                Divider()
-                    .padding(.vertical, 4)
-
-                Text("Display")
-                    .font(.headline)
-
-                Toggle("Minimalist mode", isOn: $preferences.minimalistMode)
-                    .toggleStyle(.switch)
-                    .help("Hides the HUD window. Only the menu bar icon will indicate recording state.")
-
-                Divider()
-                    .padding(.vertical, 4)
-
-                Text("Text Cleanup")
-                    .font(.headline)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Normalize spoken numbers", isOn: Binding(
-                        get: { preferences.textCleanupOptions.normalizeNumbers },
-                        set: { preferences.textCleanupOptions.normalizeNumbers = $0 }
-                    ))
-                    .toggleStyle(.switch)
-
-                    Toggle("Spoken punctuation → symbols", isOn: Binding(
-                        get: { preferences.textCleanupOptions.spokenPunctuation },
-                        set: { preferences.textCleanupOptions.spokenPunctuation = $0 }
-                    ))
-                    .toggleStyle(.switch)
-
-                    Toggle("“New line” / “new paragraph”", isOn: Binding(
-                        get: { preferences.textCleanupOptions.normalizeNewlines },
-                        set: { preferences.textCleanupOptions.normalizeNewlines = $0 }
-                    ))
-                    .toggleStyle(.switch)
-
-                    Toggle("Auto-capitalize first letter", isOn: Binding(
-                        get: { preferences.textCleanupOptions.autoCapitalizeFirstWord },
-                        set: { preferences.textCleanupOptions.autoCapitalizeFirstWord = $0 }
-                    ))
-                    .toggleStyle(.switch)
-
-                    Text("Applies when options are turned on. Punctuation mapping also tidies spacing around symbols.")
+                    Text("Press the button and type your desired hotkey combination. Requires ⌘, ⌃, or ⌥.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    HStack(spacing: 6) {
+                        Text("Clipboard")
+                            .font(.headline)
+                        InfoTooltip(message: "Control how Starling manages clipboard contents after transcribing.")
+                    }
+
+                    Toggle("Keep transcript on clipboard after auto-paste", isOn: $preferences.keepTranscriptOnClipboard)
+                        .toggleStyle(.switch)
+                        .help("When disabled, the previous clipboard contents are restored after auto-paste. Copy fallback always keeps the transcript available.")
+
+                    Text("Normally, Starling restores your previous clipboard after pasting. Enable this to keep the transcript available.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Toggle("Force plain text only", isOn: $preferences.forcePlainTextOnly)
+                        .toggleStyle(.switch)
+                        .help("When enabled, Starling writes only plain text to the clipboard and clears other formats.")
+
+                    Text("Removes formatting when pasting into rich text apps.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 4) {
+                            Text("Auto-clear clipboard")
+                                .font(.subheadline)
+                            InfoTooltip(message: "Automatically wipe the transcript from the clipboard after your selected delay.")
+                        }
+
+                        Picker("Auto-clear clipboard", selection: $preferences.clipboardAutoClear) {
+                            ForEach(PreferencesStore.ClipboardAutoClear.allCases, id: \.self) { option in
+                                Text(option.displayName).tag(option)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .disabled(!preferences.keepTranscriptOnClipboard)
+                        .help("Automatically clears the clipboard after the selected delay when Starling leaves the transcript there.")
+
+                        Text("For privacy, automatically removes transcript from clipboard after delay.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    HStack(spacing: 6) {
+                        Text("Voice Activity")
+                            .font(.headline)
+                        InfoTooltip(message: "Control whether Starling auto-stops on silence or waits for you to manually stop.")
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 4) {
+                            Text("Stop Mode")
+                                .font(.subheadline)
+                            InfoTooltip(message: "Choose between automatic silence detection or manual stopping.")
+                        }
+
+                        Picker("Stop Mode", selection: Binding(
+                            get: { preferences.trailingSilenceConfig.mode },
+                            set: { preferences.trailingSilenceConfig.mode = $0 }
+                        )) {
+                            ForEach(PreferencesStore.TrailingSilenceConfig.Mode.allCases, id: \.self) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+
+                        if preferences.trailingSilenceConfig.mode == .automatic {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Trailing Silence Duration")
+                                    .font(.subheadline)
+                                    .padding(.top, 4)
+
+                                HStack {
+                                    Slider(value: Binding(
+                                        get: { preferences.trailingSilenceConfig.duration },
+                                        set: { preferences.trailingSilenceConfig.duration = $0 }
+                                    ), in: 0.3...3.0, step: 0.05)
+                                    Text("\(preferences.trailingSilenceConfig.duration, format: .number.precision(.fractionLength(2))) s")
+                                        .monospacedDigit()
+                                        .frame(width: 60, alignment: .trailing)
+                                }
+
+                                Text("How long Starling waits after silence before auto-stopping. Longer values are kinder to dramatic pauses.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        } else {
+                            Text("Manual mode disables auto-stop. Press your hotkey again or use ESC to stop recording.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, 2)
+                        }
+                    }
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    HStack(spacing: 6) {
+                        Text("Display")
+                            .font(.headline)
+                        InfoTooltip(message: "Fine-tune the floating HUD and menu bar presentation.")
+                    }
+
+                    Toggle("Minimalist mode", isOn: $preferences.minimalistMode)
+                        .toggleStyle(.switch)
+                        .help("Hides the HUD window. Only the menu bar icon will indicate recording state.")
+
+                    Text("Hides the floating HUD window. The menu bar icon still shows recording state.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    HStack(spacing: 6) {
+                        Text("Text Cleanup")
+                            .font(.headline)
+                        InfoTooltip(message: "Tell Starling how to tidy transcripts before they are pasted.")
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Normalize spoken numbers", isOn: Binding(
+                            get: { preferences.textCleanupOptions.normalizeNumbers },
+                            set: { preferences.textCleanupOptions.normalizeNumbers = $0 }
+                        ))
+                        .toggleStyle(.switch)
+
+                        Toggle("Spoken punctuation → symbols", isOn: Binding(
+                            get: { preferences.textCleanupOptions.spokenPunctuation },
+                            set: { preferences.textCleanupOptions.spokenPunctuation = $0 }
+                        ))
+                        .toggleStyle(.switch)
+
+                        Toggle("“New line” / “new paragraph”", isOn: Binding(
+                            get: { preferences.textCleanupOptions.normalizeNewlines },
+                            set: { preferences.textCleanupOptions.normalizeNewlines = $0 }
+                        ))
+                        .toggleStyle(.switch)
+
+                        Toggle("Auto-capitalize first letter", isOn: Binding(
+                            get: { preferences.textCleanupOptions.autoCapitalizeFirstWord },
+                            set: { preferences.textCleanupOptions.autoCapitalizeFirstWord = $0 }
+                        ))
+                        .toggleStyle(.switch)
+
+                        Text("Applies when options are turned on. Punctuation mapping also tidies spacing around symbols.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-            }
             }
             .padding(24)
         }
         .frame(width: 480, height: 480)
+    }
+}
+
+private struct InfoTooltip: View {
+    let message: String
+
+    var body: some View {
+        Image(systemName: "info.circle")
+            .font(.system(size: 12, weight: .regular))
+            .foregroundColor(.secondary)
+            .help(message)
     }
 }
 
