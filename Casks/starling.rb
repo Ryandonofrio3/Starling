@@ -1,6 +1,6 @@
 cask "starling" do
-  version "0.0.16"
-  sha256 "39bb4d515dc9d55529f338003ef36fdeaa1b4a2fe7f9b5b110856fe0f8e273f5"
+  version "0.0.17"
+  sha256 "9237e92d64c2c67ca30a59a2c94f85373db65d8083b0541d135ed662a11c62c0"
 
   url "https://github.com/Ryandonofrio3/Starling/releases/download/v#{version}/Starling-v#{version}.zip"
   name "Starling"
